@@ -8,7 +8,7 @@ The **Component Dispersion Chart** is a tool designed to analyze and visualize s
 
 The tool reads a CSV file containing metrics for each component, including:
 
-- **Name**: Component name
+- **Name**: Component name;
 - **D**: Distance from the "Main Sequence" (a decimal value between 0.0 and 1.0);
 - **I**: Instability (a decimal value between 0.0 and 1.0);
 - **A**: Abstraction (a decimal value between 0.0 and 1.0);
@@ -52,7 +52,7 @@ Navigate to the directory where the program is located and execute it with the f
 java br.com.staroski.tools.analysis.ui.DispersionChartViewer metrics.csv
 ```
 
-The tool will read the [CSV file](metrics.csv), analyze the metrics, and generate a compoent displersion chart based on the provided metrics.
+The tool will read the [CSV file](metrics.csv), analyze the metrics, and generate a component dispersion chart based on the provided metrics.
 
 You should see something like that:
 
