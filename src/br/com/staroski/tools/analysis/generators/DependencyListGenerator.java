@@ -2,6 +2,7 @@ package br.com.staroski.tools.analysis.generators;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -14,22 +15,30 @@ import java.util.stream.Collectors;
 import br.com.staroski.tools.analysis.Dependency;
 import br.com.staroski.tools.analysis.Project;
 import br.com.staroski.tools.analysis.Projects;
+import br.com.staroski.utils.Arguments;
 
 /**
  * Traverses a directory tree and generate a list of dependencies for each {@link Project} found.
  *
  * @author Staroski, Ricardo Artur
  */
-public final class DependencyListGenerator implements Generator {
+public final class DependencyListGenerator {
+
+    private static final String PARAM_REPOSITORY = "-r";
+    private static final String PARAM_OUTPUT = "-o";
 
     public static void main(String[] args) {
         try {
-            Generator program = new DependencyListGenerator();
+            Arguments arguments = new Arguments(args, PARAM_REPOSITORY, PARAM_OUTPUT);
+
+            File repository = new File(arguments.getArgument(PARAM_REPOSITORY));
+            File output = new File(arguments.getArgument(PARAM_OUTPUT));
+
+            DependencyListGenerator program = new DependencyListGenerator();
             String programName = program.getClass().getSimpleName();
             System.out.printf("Starting %s...%n", programName);
 
-            File repository = new File("S:\\workspaces\\staroski\\example-system");
-            Duration elapsed = program.execute(repository);
+            Duration elapsed = program.execute(repository, output);
 
             System.out.printf("Finished %s in %02d:%02d:%02d%n", programName, elapsed.toHours(),
                     elapsed.toMinutesPart(), elapsed.toSecondsPart());
@@ -62,16 +71,23 @@ public final class DependencyListGenerator implements Generator {
 
     private DependencyListGenerator() {}
 
-    @Override
-    public Duration execute(File repository) throws Exception {
+    public Duration execute(File repository, File output) throws Exception {
         final Instant start = Instant.now();
 
         DependencyListGenerator scanner = new DependencyListGenerator();
         List<String> allDependencies = scanner.scan(repository);
 
+        System.out.printf("Generating file \"%s\"...%n", output.getCanonicalPath());
+        PrintWriter outputFile = new PrintWriter(output);
+
         for (String dependency : allDependencies) {
             System.out.println(dependency);
+            outputFile.println(dependency);
         }
+
+        outputFile.flush();
+        outputFile.close();
+        System.out.printf("File \"%s\" successfully generated!%n", output.getCanonicalPath());
 
         Instant end = Instant.now();
         return Duration.between(start, end);

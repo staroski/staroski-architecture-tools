@@ -1,32 +1,40 @@
 package br.com.staroski.tools.analysis.generators;
 
 import java.io.File;
+import java.io.PrintWriter;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Set;
-import java.util.TreeSet;
 
 import br.com.staroski.tools.analysis.Metrics;
 import br.com.staroski.tools.analysis.Project;
 import br.com.staroski.tools.analysis.Projects;
 import br.com.staroski.tools.analysis.analyzers.AbstractionAnalyzer;
 import br.com.staroski.tools.analysis.analyzers.DependencyAnalyzer;
+import br.com.staroski.utils.Arguments;
 
 /**
  * Traverses a directory tree and generates content for a CSV file with all the metrics computed for each {@link ProjectImpl} found.
  *
  * @author Staroski, Ricardo Artur
  */
-public final class ScatterPlotGenerator implements Generator {
+public final class ScatterPlotGenerator {
+
+    private static final String PARAM_REPOSITORY = "-r";
+    private static final String PARAM_OUTPUT = "-o";
 
     public static void main(String[] args) {
         try {
-            Generator program = new ScatterPlotGenerator();
+            Arguments arguments = new Arguments(args, PARAM_REPOSITORY, PARAM_OUTPUT);
+
+            File repository = new File(arguments.getArgument(PARAM_REPOSITORY));
+            File output = new File(arguments.getArgument(PARAM_OUTPUT));
+
+            ScatterPlotGenerator program = new ScatterPlotGenerator();
             String programName = program.getClass().getSimpleName();
             System.out.printf("Starting %s...%n", programName);
 
-            File repository = new File("S:\\workspaces\\staroski\\example-system");
-            Duration elapsed = program.execute(repository);
+            Duration elapsed = program.execute(repository, output);
 
             System.out.printf("Finished %s in %02d:%02d:%02d%n", programName, elapsed.toHours(),
                     elapsed.toMinutesPart(), elapsed.toSecondsPart());
@@ -37,11 +45,7 @@ public final class ScatterPlotGenerator implements Generator {
 
     private ScatterPlotGenerator() {}
 
-    @Override
-    public Duration execute(File repository) throws Exception {
-
-        boolean withCyclesOnly = true;
-
+    public Duration execute(File repository, File output) throws Exception {
         final Instant start = Instant.now();
 
         final Set<Project> projects = Projects.scan(repository);
@@ -52,48 +56,34 @@ public final class ScatterPlotGenerator implements Generator {
         dependencyAnalyzer.analyze(projects);
         abstractionAnalyzer.analyze(projects);
 
-        final Set<Project> filtered = withCyclesOnly ? new TreeSet<>() : projects;
-        if (withCyclesOnly) {
-            for (Project p : projects) {
-                if (!p.getMetrics().isAcyclic()) {
-                    filtered.add(p);
-                }
-            }
-        }
+        System.out.printf("Generating file \"%s\"...%n", output.getCanonicalPath());
+        PrintWriter outputFile = new PrintWriter(output);
 
         // print stats
-        System.out.printf("%nShowing %d Projects Stats:%n", filtered.size());
-        System.out.println("ID; Name; D; I; A; Ce; Ca; Nc; Na; DAG");
-        int id = 0;
-        for (Project project : filtered) {
-            if (withCyclesOnly) {
-                if (!project.getMetrics().isAcyclic()) {
-                    printStats(++id, project);
-                }
-            } else {
-                printStats(++id, project);
-            }
+        System.out.printf("%nShowing %d Projects Stats:%n", projects.size());
+        System.out.println("Name,D,I,A,Ce,Ca,Nc,Na,DAG");
+        outputFile.println("Name,D,I,A,Ce,Ca,Nc,Na,DAG");
+        for (Project project : projects) {
+            Metrics m = project.getMetrics();
+            String name = project.getName();
+            String d = String.format("%.2f", m.getDistance());
+            String i = String.format("%.2f", m.getInstability());
+            String a = String.format("%.2f", m.getAbstractness());
+            int ce = m.getOutputDependencies();
+            int ca = m.getInputDependencies();
+            int nc = m.getConcreteTypes();
+            int na = m.getAbstractTypes();
+            int dag = m.isAcyclic() ? 1 : 0;
+
+            System.out.printf("%s,%s,%s,%s,%d,%d,%d,%d,%d%n", name, d, i, a, ce, ca, nc, na, dag);
+            outputFile.printf("%s,%s,%s,%s,%d,%d,%d,%d,%d%n", name, d, i, a, ce, ca, nc, na, dag);
         }
+
+        outputFile.flush();
+        outputFile.close();
+        System.out.printf("File \"%s\" successfully generated!%n", output.getCanonicalPath());
 
         final Instant end = Instant.now();
         return Duration.between(start, end);
-    }
-
-    private void printStats(int id, Project project) {
-        Metrics stats = project.getMetrics();
-        try {
-            String d = String.format("%.2f", stats.getDistance()).replace('.', ',');
-            String i = String.format("%.2f", stats.getInstability()).replace('.', ',');
-            String a = String.format("%.2f", stats.getAbstractness()).replace('.', ',');
-            int ce = stats.getOutputDependencies();
-            int ca = stats.getInputDependencies();
-            int nc = stats.getConcreteTypes();
-            int na = stats.getAbstractTypes();
-            int dag = stats.isAcyclic() ? 1 : 0;
-
-            System.out.printf("%02X; %s; %s; %s; %s; %d; %d; %d; %d; %d%n", id, project, d, i, a, ce, ca, nc, na, dag);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 }
