@@ -11,10 +11,15 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.Stroke;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.geom.Arc2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
@@ -32,11 +37,14 @@ import java.util.Objects;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListSelectionModel;
+import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -53,6 +61,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.plaf.metal.MetalLookAndFeel;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
@@ -369,6 +378,60 @@ public final class DispersionChartViewer extends ApplicationFrame {
         JDialog.setDefaultLookAndFeelDecorated(true);
     }
 
+    private static void copyColumnContentToClipboard(JTable table) {
+        int column = table.getSelectedColumn();
+
+        if (column != -1) {
+            StringBuilder csvBuilder = new StringBuilder();
+            TableModel model = table.getModel();
+
+            csvBuilder.append(model.getColumnName(column)).append("\n");
+
+            for (int i = 0; i < model.getRowCount(); i++) {
+                csvBuilder.append(model.getValueAt(i, column)).append("\n");
+            }
+
+            String csvText = csvBuilder.toString();
+            StringSelection selection = new StringSelection(csvText);
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(selection, selection);
+        }
+    }
+
+    private static void copyTableContentToClipboard(JTable table) {
+        StringBuilder csvBuilder = new StringBuilder();
+        TableModel model = table.getModel();
+
+        int columnCount = model.getColumnCount();
+        int lastColumn = columnCount - 1;
+        for (int i = 1; i < columnCount; i++) {
+            csvBuilder.append(model.getColumnName(i));
+            if (i < lastColumn) {
+                csvBuilder.append(",");
+            }
+        }
+        csvBuilder.append("\n");
+
+        for (int i = 1; i < model.getRowCount(); i++) {
+            for (int j = 0; j < columnCount; j++) {
+                Object value = model.getValueAt(i, j);
+                if (j == lastColumn) {
+                    value = ((Boolean) value) ? 1 : 0;
+                }
+                csvBuilder.append(value);
+                if (j < lastColumn) {
+                    csvBuilder.append(",");
+                }
+            }
+            csvBuilder.append("\n");
+        }
+
+        String csvText = csvBuilder.toString();
+        StringSelection selection = new StringSelection(csvText);
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(selection, selection);
+    }
+
     private static List<PlotData> readCsv(File csv) throws IOException {
         List<PlotData> allData = new ArrayList<>();
 
@@ -405,6 +468,7 @@ public final class DispersionChartViewer extends ApplicationFrame {
     private JFreeChart chart;
 
     private XYPlot plot;
+
     private List<PlotData> allData;
 
     private int[] selectedIndexes = {};
@@ -715,6 +779,9 @@ public final class DispersionChartViewer extends ApplicationFrame {
         ListSelectionModel selectionModel = new ForcedListSelectionModel();
         table.setSelectionModel(selectionModel);
 
+        createTableHeaderPopupMenu(table);
+        createTableCellPopupMenu(table);
+
         // Add a listener to highlight the selected point
         selectionModel.addListSelectionListener(new ListSelectionListener() {
             @Override
@@ -749,6 +816,76 @@ public final class DispersionChartViewer extends ApplicationFrame {
             }
         });
         return table;
+    }
+
+    private void createTableCellPopupMenu(JTable table) {
+        JMenuItem copyCellItem = new JMenuItem("Copy table content as CSV to clipboard", new ImageIcon(Images.ACTION_COPY));
+        copyCellItem.addActionListener(e -> copyTableContentToClipboard(table));
+
+        JPopupMenu cellPopupMenu = new JPopupMenu();
+        cellPopupMenu.add(copyCellItem);
+
+        table.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showCellPopup(e);
+                }
+            }
+
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showCellPopup(e);
+                }
+            }
+
+            private void showCellPopup(MouseEvent e) {
+                int row = table.rowAtPoint(e.getPoint());
+                int column = table.columnAtPoint(e.getPoint());
+                if (column > 0) {
+                    if (!table.isRowSelected(row))
+                        table.changeSelection(row, column, false, false);
+
+                    cellPopupMenu.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+        });
+
+    }
+
+    private void createTableHeaderPopupMenu(JTable table) {
+
+        JMenuItem copyColumnItem = new JMenuItem("Copy column to clipboard", new ImageIcon(Images.ACTION_COPY));
+        copyColumnItem.addActionListener(e -> copyColumnContentToClipboard(table));
+
+        JPopupMenu headerPopupMenu = new JPopupMenu();
+        headerPopupMenu.add(copyColumnItem);
+
+        table.getTableHeader().addMouseListener(new MouseAdapter() {
+
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showHeaderPopup(e);
+                }
+            }
+
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showHeaderPopup(e);
+                }
+            }
+
+            private void showHeaderPopup(MouseEvent e) {
+                JTableHeader header = (JTableHeader) e.getSource();
+                TableColumnModel columnModel = header.getColumnModel();
+                int viewColumn = columnModel.getColumnIndexAtX(e.getX());
+                int column = header.getTable().convertColumnIndexToModel(viewColumn);
+                if (column > 0) {
+                    header.getTable().setColumnSelectionInterval(column, column);
+                    headerPopupMenu.show(e.getComponent(), e.getX(), e.getY());
+                }
+            }
+        });
+
     }
 
     private void showAcyclic(boolean acyclic) {

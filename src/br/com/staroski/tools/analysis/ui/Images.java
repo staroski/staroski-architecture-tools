@@ -25,5 +25,7 @@ final class Images {
     public static final BufferedImage TOOLS_128 = read("/images/tools_128x128.png");
     public static final BufferedImage TOOLS_256 = read("/images/tools_256x256.png");
 
+    public static final BufferedImage ACTION_COPY = read("/images/icons8-copy-48.png");
+
     private Images() {}
 }
