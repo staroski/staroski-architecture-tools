@@ -10,7 +10,7 @@ import br.com.staroski.tools.analysis.Metrics;
 import br.com.staroski.tools.analysis.Project;
 import br.com.staroski.tools.analysis.Projects;
 import br.com.staroski.tools.analysis.analyzers.CouplingAnalyzer;
-import br.com.staroski.tools.analysis.analyzers.CycleAnalyzer;
+import br.com.staroski.tools.analysis.analyzers.CycleChecker;
 import br.com.staroski.utils.Arguments;
 
 /**
@@ -55,7 +55,7 @@ public final class GraphvizDotFileGenerator {
         }
     }
 
-    private final CycleAnalyzer cycleAnalyzer = new CycleAnalyzer();
+    private final CycleChecker cycleChecker = new CycleChecker();
 
     private GraphvizDotFileGenerator() {}
 
@@ -146,7 +146,7 @@ public final class GraphvizDotFileGenerator {
             if (hasNoCycles("name", p, projects)) {
                 continue;
             }
-            System.out.println("    Cycle: " + cycleAnalyzer.getCycles(p));
+            System.out.println("    Cycle: " + cycleChecker.getCycles(p));
             sb.append("    ").append("\"" + p.getName() + "\"").append(" -> ").append("{");
             for (Project d : p.getProjectDependencies()) {
                 if (hasNoCycles("dependency", d, projects)) {
@@ -174,7 +174,7 @@ public final class GraphvizDotFileGenerator {
             System.out.println("    ignoring " + what + " with efferent coupling " + ec + " \"" + name + "\"");
             return true;
         }
-        if (cycleAnalyzer.isAcyclic(project)) {
+        if (cycleChecker.isAcyclic(project)) {
             System.out.println("    ignoring acyclic " + what + " \"" + name + "\"");
             return true;
         }

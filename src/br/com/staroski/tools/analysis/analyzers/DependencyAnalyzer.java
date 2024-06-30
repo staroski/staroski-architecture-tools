@@ -15,10 +15,8 @@ import br.com.staroski.tools.analysis.Project;
  */
 public final class DependencyAnalyzer {
 
-    private final CycleAnalyzer cycleAnalyzer = new CycleAnalyzer();
-
-    private DependencyAnalyzerListener listener = new DependencyAnalyzerListener() {
-
+    private class InternalListener implements DependencyAnalyzerListener {
+ 
         @Override
         public void onCouplingAnalysisStarted(DependencyAnalysisEvent event) {
             System.out.println("Coupling analysis of project \"" + event.getProject().getName() + "\" started...");
@@ -37,7 +35,11 @@ public final class DependencyAnalyzer {
         public void onCycleAnalysisFinished(DependencyAnalysisEvent event) {
             System.out.println("Circular dependencies analysis of project \"" + event.getProject().getName() + "\" finished!");
         }
-    };
+    }
+    
+    private final CycleChecker cycleChecker = new CycleChecker();
+
+    private DependencyAnalyzerListener listener = new InternalListener();
 
     public DependencyAnalyzer() {}
 
@@ -63,7 +65,7 @@ public final class DependencyAnalyzer {
         if ((stats.getInputDependencies() < 1) || (stats.getOutputDependencies() < 2)) {
             return true; // ignoring because there is no more than one depending on me
         }
-        return cycleAnalyzer.isAcyclic(project);
+        return cycleChecker.isAcyclic(project);
     }
 
     private void updateAcyclicStats(Set<Project> projects, Project project) {

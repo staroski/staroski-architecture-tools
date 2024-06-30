@@ -13,7 +13,7 @@ import br.com.staroski.tools.analysis.Project;
  *
  * @author Staroski, Ricardo Artur
  */
-public final class CycleAnalyzer {
+public final class CycleChecker {
 
     // Class to represent a cycle
     public static final class Cycle {

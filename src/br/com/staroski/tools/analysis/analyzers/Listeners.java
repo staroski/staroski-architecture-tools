@@ -1,17 +1,26 @@
 package br.com.staroski.tools.analysis.analyzers;
 
+import java.awt.AWTEventMulticaster;
+
 /**
- * Utility class that allows adding aand removing listeners without using collections.<br>
- * It is an implementation of the <I>Composite</I> design pattern.
+ * Utility class that allows adding and removing listeners without using collections.<br>
+ * It is an implementation of the <I>Composite</I> design pattern.<br>
+ * The implementation of this class is based on {@link AWTEventMulticaster}.<br>
+ * It allows method calls to be propagated to multiple objects as if they were a single one.<br>
+ * This eliminates the need to write loops to iterate over the objects.
  *
  * @author Staroski, Ricardo Artur
  */
 @SuppressWarnings("unchecked")
-public final class Listeners implements DependencyAnalyzerListener {
+final class Listeners implements DependencyAnalyzerListener, AbstractionAnalyzerListener {
 
-    // The implementation of this class is based on AWTEventMulticaster
-    // Allowing method calls to be propagated to multiple objects as if they were a single one
-    // This eliminates the need to write loops to iterate over the objects
+    public static AbstractionAnalyzerListener addAbstractionAnalyzerListener(AbstractionAnalyzerListener existing, AbstractionAnalyzerListener toAdd) {
+        return add(existing, toAdd);
+    }
+
+    public static AbstractionAnalyzerListener removeAbstractionAnalyzerListener(AbstractionAnalyzerListener existing, AbstractionAnalyzerListener toRemove) {
+        return remove(existing, toRemove);
+    }
 
     public static DependencyAnalyzerListener addDependencyAnalyzerListener(DependencyAnalyzerListener existing, DependencyAnalyzerListener toAdd) {
         return add(existing, toAdd);
@@ -93,4 +102,27 @@ public final class Listeners implements DependencyAnalyzerListener {
         ((DependencyAnalyzerListener) b).onCycleAnalysisFinished(event);
     }
 
+    @Override
+    public void onAbstractionAnalysisStarted(AbstractionAnalysisEvent event) {
+        ((AbstractionAnalyzerListener) a).onAbstractionAnalysisStarted(event);
+        ((AbstractionAnalyzerListener) b).onAbstractionAnalysisStarted(event);
+    }
+
+    @Override
+    public void onAbstractionAnalysisFinished(AbstractionAnalysisEvent event) {
+        ((AbstractionAnalyzerListener) a).onAbstractionAnalysisFinished(event);
+        ((AbstractionAnalyzerListener) b).onAbstractionAnalysisFinished(event);
+    }
+
+    @Override
+    public void onFileParsingStarted(AbstractionAnalysisEvent event) {
+        ((AbstractionAnalyzerListener) a).onFileParsingStarted(event);
+        ((AbstractionAnalyzerListener) b).onFileParsingStarted(event);
+    }
+
+    @Override
+    public void onFileParsingFinished(AbstractionAnalysisEvent event) {
+        ((AbstractionAnalyzerListener) a).onFileParsingFinished(event);
+        ((AbstractionAnalyzerListener) b).onFileParsingFinished(event);
+    }
 }

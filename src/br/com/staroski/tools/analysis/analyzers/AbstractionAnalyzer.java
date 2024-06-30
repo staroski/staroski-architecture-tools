@@ -11,9 +11,9 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 
 import br.com.staroski.tools.analysis.Metrics;
-import br.com.staroski.tools.analysis.Project;
 import br.com.staroski.tools.analysis.MetricsVisitor;
 import br.com.staroski.tools.analysis.MetricsVisitors;
+import br.com.staroski.tools.analysis.Project;
 
 /**
  * This class iterates over a {@link Set} of {@link ProjectImpl} and computes its number of <b>abstract types</b> ("Na") and <b>concrete types</b> ("Nc").
@@ -22,13 +22,45 @@ import br.com.staroski.tools.analysis.MetricsVisitors;
  */
 public final class AbstractionAnalyzer {
 
+    private final class InternalListener implements AbstractionAnalyzerListener {
+
+        @Override
+        public void onAbstractionAnalysisStarted(AbstractionAnalysisEvent event) {
+            System.out.println("Abstraction analysis of name \"" + event.getProject().getName() + "\" started...");
+        }
+
+        public void onAbstractionAnalysisFinished(AbstractionAnalysisEvent event) {
+            System.out.println("Abstraction analysis of name \"" + event.getProject().getName() + "\" done!");
+        }
+
+        @Override
+        public void onFileParsingStarted(AbstractionAnalysisEvent event) {
+            System.out.println("    Parsing \"" + event.getFile().getName() + "\"...");
+        }
+
+        @Override
+        public void onFileParsingFinished(AbstractionAnalysisEvent event) {
+            System.out.println("    Parsing \"" + event.getFile().getName() + "\" finished!");
+        }
+    }
+
+    private AbstractionAnalyzerListener listener = new InternalListener();
+
+    public void addAbstractionAnalyzerListener(AbstractionAnalyzerListener listener) {
+        this.listener = Listeners.addAbstractionAnalyzerListener(this.listener, listener);
+    }
+
+    public void removeAbstractionAnalyzerListener(AbstractionAnalyzerListener listener) {
+        this.listener = Listeners.removeAbstractionAnalyzerListener(this.listener, listener);
+    }
+
     public void analyze(Set<Project> projects) {
         for (Project project : projects) {
-            System.out.println("Abstraction analysis of name \"" + project.getName() + "\" started...");
+            listener.onAbstractionAnalysisStarted(new AbstractionAnalysisEvent(project));
 
             scanSourceFiles(project);
 
-            System.out.println("Abstraction analysis of name \"" + project.getName() + "\" done!");
+            listener.onAbstractionAnalysisFinished(new AbstractionAnalysisEvent(project));
         }
     }
 
@@ -58,20 +90,24 @@ public final class AbstractionAnalyzer {
     }
 
     @SuppressWarnings("deprecation")
-    private void updateStats(Project project, Path file) {
+    private void updateStats(Project project, Path sourcePath) {
         try {
-            System.out.print("    Parsing \"" + file.toFile().getName() + "\"...");
-            CompilationUnit compilationUnit = StaticJavaParser.parse(file, StandardCharsets.ISO_8859_1);
-            System.out.println("    Done!");
+            File file = sourcePath.toFile();
+
+            listener.onFileParsingStarted(new AbstractionAnalysisEvent(project, file));
+
+            CompilationUnit compilationUnit = StaticJavaParser.parse(sourcePath, StandardCharsets.ISO_8859_1);
+
+            listener.onFileParsingFinished(new AbstractionAnalysisEvent(project, file));
 
             // Update name stats
-            final Metrics stats = project.getMetrics();
+            final Metrics metrics = project.getMetrics();
             compilationUnit.findAll(ClassOrInterfaceDeclaration.class).forEach(classOrInterface -> {
                 boolean isAbstract = classOrInterface.isInterface() || classOrInterface.isAbstract();
                 MetricsVisitor visitor = isAbstract //
                         ? MetricsVisitors.incrementAbstractTypes()//
                         : MetricsVisitors.incrementConcreteTypes();
-                stats.accept(visitor);
+                metrics.accept(visitor);
             });
         } catch (IOException e) {
             e.printStackTrace();
