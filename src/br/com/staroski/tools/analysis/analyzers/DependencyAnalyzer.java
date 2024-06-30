@@ -3,8 +3,8 @@ package br.com.staroski.tools.analysis.analyzers;
 import java.util.Set;
 
 import br.com.staroski.tools.analysis.Metrics;
-import br.com.staroski.tools.analysis.Project;
 import br.com.staroski.tools.analysis.MetricsVisitors;
+import br.com.staroski.tools.analysis.Project;
 
 /**
  * This class iterates over a {@link Set} of {@link Project} and computes some dependency metrics on it like: number of <b>abstract types</b> ("Na"), number of
@@ -17,7 +17,37 @@ public final class DependencyAnalyzer {
 
     private final CycleAnalyzer cycleAnalyzer = new CycleAnalyzer();
 
+    private DependencyAnalyzerListener listener = new DependencyAnalyzerListener() {
+
+        @Override
+        public void onCouplingAnalysisStarted(DependencyAnalysisEvent event) {
+            System.out.println("Coupling analysis of project \"" + event.getProject().getName() + "\" started...");
+        }
+
+        @Override
+        public void onCouplingAnalysisFinished(DependencyAnalysisEvent event) {
+            System.out.println("Coupling analysis of project \"" + event.getProject().getName() + "\" finished!");
+        }
+
+        public void onCycleAnalysisStarted(DependencyAnalysisEvent event) {
+            System.out.println("Circular dependencies analysis of project \"" + event.getProject().getName() + "\" started...");
+        };
+
+        @Override
+        public void onCycleAnalysisFinished(DependencyAnalysisEvent event) {
+            System.out.println("Circular dependencies analysis of project \"" + event.getProject().getName() + "\" finished!");
+        }
+    };
+
     public DependencyAnalyzer() {}
+
+    public void addDependencyAnalyzerListener(DependencyAnalyzerListener listener) {
+        this.listener = Listeners.addDependencyAnalyzerListener(this.listener, listener);
+    }
+
+    public void removeDependencyAnalyzerListener(DependencyAnalyzerListener listener) {
+        this.listener = Listeners.removeDependencyAnalyzerListener(this.listener, listener);
+    }
 
     public void analyze(Set<Project> projects) {
         for (Project project : projects) {
@@ -29,37 +59,30 @@ public final class DependencyAnalyzer {
     }
 
     private boolean isAcyclic(Project project, Set<Project> projects) {
-        System.out.print("Checking circular dependencies of name \"" + project.getName() + "\" started...");
-        try {
-            Metrics stats = project.getMetrics();
-            if ((stats.getInputDependencies() < 1) || (stats.getOutputDependencies() < 2)) {
-                return true; // ignoring because there is no more than one depending on me
-            }
-
-            if (cycleAnalyzer.isAcyclic(project)) {
-                System.out.print("    name is acyclic");
-                return true;
-            }
-            return false;
-        } finally {
-            System.out.println("     Done!");
+        Metrics stats = project.getMetrics();
+        if ((stats.getInputDependencies() < 1) || (stats.getOutputDependencies() < 2)) {
+            return true; // ignoring because there is no more than one depending on me
         }
+        return cycleAnalyzer.isAcyclic(project);
     }
 
     private void updateAcyclicStats(Set<Project> projects, Project project) {
+        listener.onCycleAnalysisStarted(new DependencyAnalysisEvent(project));
+
         project.getMetrics().accept(MetricsVisitors.setAcyclic(isAcyclic(project, projects)));
+
+        listener.onCycleAnalysisFinished(new DependencyAnalysisEvent(project));
     }
 
     private void updateCouplingStats(Project project, Set<Project> allProjects) {
-        String name = project.getName();
-        System.out.print("Coupling analysis  of name \"" + name + "\" started...");
+        listener.onCouplingAnalysisStarted(new DependencyAnalysisEvent(project));
 
-        Metrics stats = project.getMetrics();
+        Metrics metrics = project.getMetrics();
 
         // compute efferent coupling
         int outputDependencies = project.getProjectDependencies().size();
         for (int i = 0; i < outputDependencies; i++) {
-            stats.accept(MetricsVisitors.incrementOutputDependencies());
+            metrics.accept(MetricsVisitors.incrementOutputDependencies());
         }
 
         // compute afferent coupling
@@ -68,10 +91,10 @@ public final class DependencyAnalyzer {
                 continue;
             }
             if (otherProject.getProjectDependencies().contains(project)) {
-                stats.accept(MetricsVisitors.incrementInputDependencies());
+                metrics.accept(MetricsVisitors.incrementInputDependencies());
             }
         }
 
-        System.out.println("    Done!");
+        listener.onCouplingAnalysisFinished(new DependencyAnalysisEvent(project));
     }
 }
