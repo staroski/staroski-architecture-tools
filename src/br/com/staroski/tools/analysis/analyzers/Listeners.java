@@ -12,7 +12,15 @@ import java.awt.AWTEventMulticaster;
  * @author Staroski, Ricardo Artur
  */
 @SuppressWarnings("unchecked")
-final class Listeners implements DependencyAnalyzerListener, AbstractionAnalyzerListener {
+final class Listeners implements DependencyAnalyzerListener, AbstractionAnalyzerListener, CouplingAnalyzerListener {
+
+    public static CouplingAnalyzerListener addCouplingAnalyzerListener(CouplingAnalyzerListener existing, CouplingAnalyzerListener toAdd) {
+        return add(existing, toAdd);
+    }
+
+    public static CouplingAnalyzerListener removeCouplingAnalyzerListener(CouplingAnalyzerListener existing, CouplingAnalyzerListener toRemove) {
+        return remove(existing, toRemove);
+    }
 
     public static AbstractionAnalyzerListener addAbstractionAnalyzerListener(AbstractionAnalyzerListener existing, AbstractionAnalyzerListener toAdd) {
         return add(existing, toAdd);
@@ -125,4 +133,17 @@ final class Listeners implements DependencyAnalyzerListener, AbstractionAnalyzer
         ((AbstractionAnalyzerListener) a).onFileParsingFinished(event);
         ((AbstractionAnalyzerListener) b).onFileParsingFinished(event);
     }
+
+    @Override
+    public void onCouplingAnalysisStarted(CouplingAnalysisEvent event) {
+        ((CouplingAnalyzerListener) a).onCouplingAnalysisStarted(event);
+        ((CouplingAnalyzerListener) b).onCouplingAnalysisStarted(event);
+    }
+
+    @Override
+    public void onCouplingAnalysisFinished(CouplingAnalysisEvent event) {
+        ((CouplingAnalyzerListener) a).onCouplingAnalysisFinished(event);
+        ((CouplingAnalyzerListener) b).onCouplingAnalysisFinished(event);
+    }
+
 }

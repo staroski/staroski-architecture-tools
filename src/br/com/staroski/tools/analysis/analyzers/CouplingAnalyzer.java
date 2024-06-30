@@ -3,8 +3,8 @@ package br.com.staroski.tools.analysis.analyzers;
 import java.util.Set;
 
 import br.com.staroski.tools.analysis.Metrics;
-import br.com.staroski.tools.analysis.Project;
 import br.com.staroski.tools.analysis.MetricsVisitors;
+import br.com.staroski.tools.analysis.Project;
 
 /**
  * This class iterates over a {@link Set} of {@link ProjectImpl} and computes its <b>efferent coupling</b> ("Ce" - output dependencies) and <b>afferent
@@ -17,6 +17,29 @@ import br.com.staroski.tools.analysis.MetricsVisitors;
  */
 public final class CouplingAnalyzer {
 
+    private final class InternalListener implements CouplingAnalyzerListener {
+
+        @Override
+        public void onCouplingAnalysisStarted(CouplingAnalysisEvent event) {
+            System.out.println("Coupling analysis of project \"" + event.getProject().getName() + "\" started...");
+        }
+
+        @Override
+        public void onCouplingAnalysisFinished(CouplingAnalysisEvent event) {
+            System.out.println("Coupling analysis of project \"" + event.getProject().getName() + "\" finished!");
+        }
+    }
+
+    private CouplingAnalyzerListener listener = new InternalListener();
+
+    public void addCouplingAnalyzerListener(CouplingAnalyzerListener listener) {
+        this.listener = Listeners.addCouplingAnalyzerListener(this.listener, listener);
+    }
+
+    public void removeCouplingAnalyzerListener(CouplingAnalyzerListener listener) {
+        this.listener = Listeners.removeCouplingAnalyzerListener(this.listener, listener);
+    }
+
     public void analyze(Set<Project> projects) {
         for (Project project : projects) {
             updateStats(project, projects);
@@ -24,8 +47,8 @@ public final class CouplingAnalyzer {
     }
 
     private void updateStats(Project project, Set<Project> allProjects) {
-        String name = project.getName();
-        System.out.print("Coupling analysis  of name \"" + name + "\" started...");
+
+        listener.onCouplingAnalysisStarted(new CouplingAnalysisEvent(project));
 
         Metrics stats = project.getMetrics();
 
@@ -45,6 +68,6 @@ public final class CouplingAnalyzer {
             }
         }
 
-        System.out.println("    Done!");
+        listener.onCouplingAnalysisFinished(new CouplingAnalysisEvent(project));
     }
 }

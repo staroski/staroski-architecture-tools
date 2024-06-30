@@ -61,8 +61,8 @@ public final class DependencyAnalyzer {
     }
 
     private boolean isAcyclic(Project project, Set<Project> projects) {
-        Metrics stats = project.getMetrics();
-        if ((stats.getInputDependencies() < 1) || (stats.getOutputDependencies() < 2)) {
+        Metrics metrics = project.getMetrics();
+        if ((metrics.getInputDependencies() < 1) || (metrics.getOutputDependencies() < 2)) {
             return true; // ignoring because there is no more than one depending on me
         }
         return cycleChecker.isAcyclic(project);
