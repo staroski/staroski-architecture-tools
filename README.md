@@ -49,12 +49,16 @@ To use the Component Dispersion Chart tool:
 Navigate to the directory where the program is located and execute it with the following command:
 
 ```bash
-java br.com.staroski.tools.analysis.ui.DispersionChartViewer metrics.csv
+java br.com.staroski.tools.Execute
 ```
 
-The tool will read the [CSV file](metrics.csv), analyze the metrics, and generate a component dispersion chart based on the provided metrics.
+Use the "**File -> Import CSV**" menu to import the [CSV file](metrics.csv) into the program.
 
-You should see something like that:
+On the left panel you will see the **Components Metrics**.
+
+On the right panel you will see the **Component Dispersion Chart**.
+
+The selected components will be rendered in **red** and the unselected in **blue**: 
 
 ![Example of Component Dispersion Chart](example.png)
 
