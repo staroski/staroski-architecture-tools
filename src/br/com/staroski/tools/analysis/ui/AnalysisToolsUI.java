@@ -10,10 +10,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.StandardOpenOption;
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -29,11 +31,18 @@ import javax.swing.WindowConstants;
 @SuppressWarnings("serial")
 public final class AnalysisToolsUI extends JFrame {
 
-    private final JPanel mainPanel;
-    private final DispersionChartPanel dispersionChartPanel;
+    private JMenu menuFile;
+    private JMenuItem menuItemImportCSV;
+    private JMenuItem menuItemExportCSV;
+    private JMenuItem menuItemExit;
+    private JMenu menuLanguage;
+    private JMenuItem menuItemPtBr;
+    private JMenuItem menuItemEnUs;
+    private JMenuItem menuItemDeDe;
+    private DispersionChartPanel dispersionChartPanel;
 
     public AnalysisToolsUI() {
-        super("Staroski Architecture Tools");
+        super(UI.getString("AnalysisToolsUI.title"));
         setIconImages(createIcons());
         setMinimumSize(new Dimension(640, 480));
         setSize(new Dimension(1366, 768));
@@ -49,7 +58,7 @@ public final class AnalysisToolsUI extends JFrame {
 
         setJMenuBar(createMenuBar());
 
-        mainPanel = new JPanel(new BorderLayout());
+        JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
         dispersionChartPanel = new DispersionChartPanel();
@@ -58,8 +67,30 @@ public final class AnalysisToolsUI extends JFrame {
         setContentPane(mainPanel);
     }
 
+    @Override
+    public void validate() {
+        super.validate();
+        applyI18N();
+    }
+
+    private void applyI18N() {
+        setTitle(UI.getString("AnalysisToolsUI.title"));
+
+        menuFile.setText(UI.getString("AnalysisToolsUI.menu.file"));
+        menuItemImportCSV.setText(UI.getString("AnalysisToolsUI.menu.file.importCSV"));
+        menuItemExportCSV.setText(UI.getString("AnalysisToolsUI.menu.file.exportCSV"));
+        menuItemExit.setText(UI.getString("AnalysisToolsUI.menu.file.exit"));
+
+        menuLanguage.setText(UI.getString("AnalysisToolsUI.menu.language"));
+        menuItemPtBr.setText(UI.getString("AnalysisToolsUI.menu.language.pt_BR"));
+        menuItemEnUs.setText(UI.getString("AnalysisToolsUI.menu.language.en_US"));
+        menuItemDeDe.setText(UI.getString("AnalysisToolsUI.menu.language.de_DE"));
+    }
+
     private void askForExit() {
-        if (Dialogs.confirm(this, "Exit", "Do you really want to exit?")) {
+        String title = UI.getString("AnalysisToolsUI.exit.title");
+        String message = UI.getString("AnalysisToolsUI.exit.message");
+        if (UI.showConfirmation(this, title, message)) {
             System.exit(0);
         }
     }
@@ -75,36 +106,62 @@ public final class AnalysisToolsUI extends JFrame {
     }
 
     private JMenuBar createMenuBar() {
-        JMenu menuFile = new JMenu("File");
-
-        // Criação dos itens do menu "Arquivo"
-        JMenuItem menuItemImport = new JMenuItem("Import CSV");
-        menuItemImport.addActionListener(event -> importCsv());
-
-        JMenuItem menuItemExport = new JMenuItem("Export CSV");
-        menuItemExport.addActionListener(event -> exportCsv());
-
-        JMenuItem menuItemExit = new JMenuItem("Exit");
-        menuItemExit.addActionListener(event -> askForExit());
-
-        menuFile.add(menuItemImport);
-        menuFile.add(menuItemExport);
-        menuFile.addSeparator();
-        menuFile.add(menuItemExit);
-
         JMenuBar menuBar = new JMenuBar();
-        menuBar.add(menuFile);
+        menuBar.add(createMenuFile());
+        menuBar.add(createMenuLanguage());
         return menuBar;
     }
 
+    private JMenu createMenuFile() {
+        menuFile = new JMenu(UI.getString("AnalysisToolsUI.menu.file"));
+
+        menuItemImportCSV = new JMenuItem(UI.getString("AnalysisToolsUI.menu.file.importCSV"));
+        menuItemImportCSV.addActionListener(event -> importCsv());
+
+        menuItemExportCSV = new JMenuItem(UI.getString("AnalysisToolsUI.menu.file.exportCSV"));
+        menuItemExportCSV.addActionListener(event -> exportCsv());
+
+        menuItemExit = new JMenuItem(UI.getString("AnalysisToolsUI.menu.file.exit"));
+        menuItemExit.addActionListener(event -> askForExit());
+
+        menuFile.add(menuItemImportCSV);
+        menuFile.add(menuItemExportCSV);
+        menuFile.addSeparator();
+        menuFile.add(menuItemExit);
+        return menuFile;
+    }
+
+    private JMenu createMenuLanguage() {
+        menuLanguage = new JMenu(UI.getString("AnalysisToolsUI.menu.language"));
+
+        menuItemEnUs = new JMenuItem(UI.getString("AnalysisToolsUI.menu.language.en_US"), new ImageIcon(Images.LANGUAGE_EN_US_24));
+        menuItemEnUs.addActionListener(event -> UI.setLocale(UI.UNITED_STATES));
+
+        menuItemDeDe = new JMenuItem(UI.getString("AnalysisToolsUI.menu.language.de_DE"), new ImageIcon(Images.LANGUAGE_DE_DE_24));
+        menuItemDeDe.addActionListener(event -> UI.setLocale(UI.GERMANY));
+
+        menuItemPtBr = new JMenuItem(UI.getString("AnalysisToolsUI.menu.language.pt_BR"), new ImageIcon(Images.LANGUAGE_PT_BR_24));
+        menuItemPtBr.addActionListener(event -> UI.setLocale(UI.BRAZIL));
+
+        menuLanguage.add(menuItemEnUs);
+        menuLanguage.add(menuItemDeDe);
+        menuLanguage.add(menuItemPtBr);
+        return menuLanguage;
+    }
+
     private void exportCsv() {
-        final File fileToSave = Dialogs.openFile(this, "CSV files", ".csv");
+        String description = UI.getString("AnalysisToolsUI.menu.file.exportCSV.description");
+        String extension = UI.getString("AnalysisToolsUI.menu.file.exportCSV.type");
+        final File fileToSave = UI.saveFile(this, description, extension);
         if (fileToSave == null) {
             return;
         }
         boolean canSave = true;
         if (fileToSave.exists()) {
-            canSave = Dialogs.confirm(this, "Existing File", "The file \"" + fileToSave.getName() + "\" already exists.\nDo you want to overwrite it?");
+            String title = UI.getString("AnalysisToolsUI.menu.file.exportCSV.existing.title");
+            String message = UI.getString("AnalysisToolsUI.menu.file.exportCSV.existing.message");
+            message = MessageFormat.format(message, fileToSave.getName());
+            canSave = UI.showConfirmation(this, title, message);
         }
         if (canSave) {
             try {
@@ -117,16 +174,21 @@ public final class AnalysisToolsUI extends JFrame {
                 };
                 Files.writeString(fileToSave.toPath(), csv, options);
 
-                Dialogs.showInformation(this, "Success", "CSV successfully exported!");
+                String title = UI.getString("AnalysisToolsUI.menu.file.exportCSV.success.title");
+                String message = UI.getString("AnalysisToolsUI.menu.file.exportCSV.success.message");
+                UI.showInformation(this, title, message);
             } catch (IOException e) {
                 e.printStackTrace();
-                Dialogs.showError(this, e);
+                String title = UI.getString("AnalysisToolsUI.menu.file.exportCSV.error.title");
+                UI.showError(this, title, e);
             }
         }
     }
 
     private void importCsv() {
-        File fileToImport = Dialogs.openFile(this, "CSV files", ".csv");
+        String description = UI.getString("AnalysisToolsUI.menu.file.importCSV.description");
+        String extension = UI.getString("AnalysisToolsUI.menu.file.importCSV.type");
+        File fileToImport = UI.openFile(this, description, extension);
         if (fileToImport != null) {
             dispersionChartPanel.setCsvFile(fileToImport);
         }

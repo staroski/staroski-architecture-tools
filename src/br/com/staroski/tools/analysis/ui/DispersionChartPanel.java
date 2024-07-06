@@ -28,6 +28,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -61,6 +62,7 @@ import javax.swing.table.TableRowSorter;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
+import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.annotations.XYLineAnnotation;
 import org.jfree.chart.annotations.XYShapeAnnotation;
@@ -91,10 +93,9 @@ final class DispersionChartPanel extends JPanel {
 
     private static class ComponentTableModel extends AbstractTableModel {
 
-        private static final String[] COLUMNS = { "Row", "Name", "D", "I", "A", "Na", "Nc", "Ce", "Ca",
-                "DAG" };
+        private String[] columns = UI.getString("DispersionChartPanel.components.table.columns").split(",");
 
-        private static final Class<?>[] COLUMN_TYPES = { Integer.class, String.class, Double.class,
+        private Class<?>[] columnTypes = { Integer.class, String.class, Double.class,
                 Double.class, Double.class, Integer.class, Integer.class, Integer.class, Integer.class, Boolean.class };
 
         private final List<PlotData> datalist = new ArrayList<>();
@@ -109,17 +110,17 @@ final class DispersionChartPanel extends JPanel {
 
         @Override
         public Class<?> getColumnClass(int col) {
-            return COLUMN_TYPES[col];
+            return columnTypes[col];
         }
 
         @Override
         public int getColumnCount() {
-            return COLUMNS.length;
+            return columns.length;
         }
 
         @Override
         public String getColumnName(int col) {
-            return COLUMNS[col];
+            return columns[col];
         }
 
         public PlotData getObjectAt(int row) {
@@ -165,6 +166,28 @@ final class DispersionChartPanel extends JPanel {
             datalist.clear();
             datalist.addAll(newData);
             fireTableDataChanged();
+        }
+    }
+
+    private class CustomChartPanel extends ChartPanel {
+
+        public CustomChartPanel(JFreeChart chart) {
+            super(chart);
+        }
+
+        public void doSaveAs() {
+            exportPng(getChart(), getWidth(), getHeight());
+        }
+
+        @Override
+        protected JPopupMenu createPopupMenu(boolean properties, boolean copy, boolean save, boolean print, boolean zoom) {
+            JPopupMenu menu = new JPopupMenu();
+
+            saveAsPngItem = new JMenuItem(UI.getString("DispersionChartPanel.components.chart.exportPng"));
+            saveAsPngItem.addActionListener(event -> doSaveAs());
+            menu.add(saveAsPngItem);
+
+            return menu;
         }
     }
 
@@ -335,19 +358,30 @@ final class DispersionChartPanel extends JPanel {
             this.seriesIndex = seriesIndex;
             this.itemIndex = itemIndex;
         }
-    }
+    };
 
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.00");
 
     private JFreeChart chart;
-
     private XYPlot plot;
-
     private List<PlotData> allData;
-
     private int[] selectedIndexes = {};
-
     private JTable tableComponents;
+    private JFreeChart componentDispersionChart;
+    private XYTextAnnotation mainSequenceAnnotation;
+    private XYTextAnnotation zoneOfPainAnnotation;
+    private XYTextAnnotation zoneOfUselessnesAnnotation;
+    private JPanel panelDisplayOptions;
+    private JRadioButton radioButtonDisplayAll;
+    private JRadioButton radioButtonDisplayAcyclic;
+    private JRadioButton radioButtonDisplayCyclic;
+    private JScrollPane scrollPaneComponents;
+    private JScrollPane scrollPaneChart;
+    private JPanel panelChartDisplayOptions;
+    private JCheckBox checkboxColorfullBackground;
+    private JMenuItem saveAsPngItem;
+    private JMenuItem menuItemCopyColumnContent;
+    private JMenuItem menuItemCopyTableContent;
 
     protected DispersionChartPanel() {
         super(new BorderLayout());
@@ -398,8 +432,83 @@ final class DispersionChartPanel extends JPanel {
             showAll();
         } catch (IOException e) {
             e.printStackTrace();
-            Dialogs.showError(this, e);
+            UI.showError(this, "Error", e);
         }
+    }
+
+    @Override
+    public void updateUI() {
+        super.updateUI();
+        applyI18N();
+    }
+
+    private void applyI18N() {
+        if (panelDisplayOptions == null) {
+            return;
+        }
+        panelDisplayOptions.setBorder(BorderFactory.createTitledBorder(UI.getString("DispersionChartPanel.components.display.titledBorder")));
+
+        radioButtonDisplayAll.setText(UI.getString("DispersionChartPanel.components.display.all"));
+        radioButtonDisplayAcyclic.setText(UI.getString("DispersionChartPanel.components.display.acyclic"));
+        radioButtonDisplayCyclic.setText(UI.getString("DispersionChartPanel.components.display.cyclic"));
+
+        scrollPaneComponents.setBorder(BorderFactory.createTitledBorder(UI.getString("DispersionChartPanel.components.table.titledBorder")));
+        scrollPaneChart.setBorder(BorderFactory.createTitledBorder(UI.getString("DispersionChartPanel.components.chart.titledBorder")));
+
+        panelChartDisplayOptions.setBorder(BorderFactory.createTitledBorder(UI.getString("DispersionChartPanel.components.chart.display.titledBorder")));
+        checkboxColorfullBackground.setText(UI.getString("DispersionChartPanel.components.chart.display.colorfullBackground"));
+
+        if (saveAsPngItem != null) {
+            saveAsPngItem.setText(UI.getString("DispersionChartPanel.components.chart.exportPng"));
+        }
+        
+        menuItemCopyColumnContent.setText(UI.getString("DispersionChartPanel.components.table.copyColumnContents"));
+        menuItemCopyTableContent.setText(UI.getString("DispersionChartPanel.components.table.copyTableContents"));
+
+        applyI18NTable();
+        applyI18NChart();
+    }
+
+    private void applyI18NChart() {
+        if (componentDispersionChart == null) {
+            return;
+        }
+        String title = UI.getString("DispersionChartPanel.components.chart.title");
+        String axisX = UI.getString("DispersionChartPanel.components.chart.axisX");
+        String axisY = UI.getString("DispersionChartPanel.components.chart.axisY");
+        String mainSequence = UI.getString("DispersionChartPanel.components.chart.mainSequence");
+        String zoneOfPain = UI.getString("DispersionChartPanel.components.chart.zoneOfPain");
+        String zoneOfUselessness = UI.getString("DispersionChartPanel.components.chart.zoneOfUselessness");
+
+        componentDispersionChart.setTitle(title);
+        mainSequenceAnnotation.setText(mainSequence);
+        zoneOfPainAnnotation.setText(zoneOfPain);
+        zoneOfUselessnesAnnotation.setText(zoneOfUselessness);
+
+        XYPlot plot = (XYPlot) componentDispersionChart.getPlot();
+        plot.getDomainAxis().setLabel(axisX);
+        plot.getRangeAxis().setLabel(axisY);
+
+    }
+
+    private void applyI18NTable() {
+        if (tableComponents == null) {
+            return;
+        }
+        final String[] columns = UI.getString("DispersionChartPanel.components.table.columns").split(",");
+        final ComponentTableModel model = (ComponentTableModel) tableComponents.getModel();
+        model.columns = columns;
+        final TableColumnModel columnModel = tableComponents.getColumnModel();
+        columnModel.getColumn(0).setHeaderValue(columns[0]);
+        columnModel.getColumn(1).setHeaderValue(columns[1]);
+        columnModel.getColumn(2).setHeaderValue(columns[2]);
+        columnModel.getColumn(3).setHeaderValue(columns[3]);
+        columnModel.getColumn(4).setHeaderValue(columns[4]);
+        columnModel.getColumn(5).setHeaderValue(columns[5]);
+        columnModel.getColumn(6).setHeaderValue(columns[6]);
+        columnModel.getColumn(7).setHeaderValue(columns[7]);
+        columnModel.getColumn(8).setHeaderValue(columns[8]);
+        columnModel.getColumn(9).setHeaderValue(columns[9]);
     }
 
     private void copyColumnContentToClipboard() {
@@ -433,13 +542,15 @@ final class DispersionChartPanel extends JPanel {
     private JFreeChart createChart() {
 
         XYSeriesCollection dataset = new XYSeriesCollection();
-        XYSeries series = new XYSeries("Components");
+        XYSeries series = new XYSeries(UI.getString("DispersionChartPanel.components.table.titledBorder"));
         dataset.addSeries(series);
 
-        JFreeChart chart = ChartFactory.createScatterPlot("Component Dispersion Chart", "Instability", "Abstractness",
-                dataset, PlotOrientation.VERTICAL, false, true, false);
+        String title = UI.getString("DispersionChartPanel.components.chart.title");
+        String axisX = UI.getString("DispersionChartPanel.components.chart.axisX");
+        String axisY = UI.getString("DispersionChartPanel.components.chart.axisY");
+        componentDispersionChart = ChartFactory.createScatterPlot(title, axisX, axisY, dataset, PlotOrientation.VERTICAL, false, true, false);
 
-        plot = (XYPlot) chart.getPlot();
+        plot = (XYPlot) componentDispersionChart.getPlot();
         plot.setDomainPannable(false);
         plot.setRangePannable(false);
         plot.setForegroundAlpha(0.75f);
@@ -483,13 +594,13 @@ final class DispersionChartPanel extends JPanel {
         XYLineAnnotation yAxisLeft = new XYLineAnnotation(0, 0, 0, 1, line, Color.BLACK);
         XYLineAnnotation yAxisRight = new XYLineAnnotation(1, 0, 1, 1, dashes, Color.BLACK);
 
-        Font textFont = new Font("SansSerif", Font.PLAIN, 16);
+        Font textFont = new Font("SansSerif", Font.PLAIN, 18);
         double textAngle = Math.toRadians(45.0);
 
         XYLineAnnotation mainSequence = new XYLineAnnotation(0, 1, 1, 0, line, Color.GREEN);
-        XYTextAnnotation mainSequenceText = new XYTextAnnotation("The Main Sequence", 0.5, 0.5);
-        mainSequenceText.setRotationAngle(textAngle);
-        mainSequenceText.setFont(textFont);
+        mainSequenceAnnotation = new XYTextAnnotation(UI.getString("DispersionChartPanel.components.chart.mainSequence"), 0.5, 0.5);
+        mainSequenceAnnotation.setRotationAngle(textAngle);
+        mainSequenceAnnotation.setFont(textFont);
 
         double x = -0.5;
         double y = -0.5;
@@ -497,11 +608,10 @@ final class DispersionChartPanel extends JPanel {
         double h = 1.0;
         double start = 0.0;
         double extent = -90;
-        XYShapeAnnotation zoneOfPain = new XYShapeAnnotation(new Arc2D.Double(x, y, w, h, start, extent, Arc2D.OPEN),
-                line, Color.RED);
-        XYTextAnnotation zoneOfPainText = new XYTextAnnotation("Zone of Pain", 0.2, 0.2);
-        zoneOfPainText.setRotationAngle(textAngle);
-        zoneOfPainText.setFont(textFont);
+        XYShapeAnnotation zoneOfPain = new XYShapeAnnotation(new Arc2D.Double(x, y, w, h, start, extent, Arc2D.OPEN), line, Color.RED);
+        zoneOfPainAnnotation = new XYTextAnnotation(UI.getString("DispersionChartPanel.components.chart.zoneOfPain"), 0.2, 0.2);
+        zoneOfPainAnnotation.setRotationAngle(textAngle);
+        zoneOfPainAnnotation.setFont(textFont);
 
         x = 0.5;
         y = 0.5;
@@ -509,11 +619,10 @@ final class DispersionChartPanel extends JPanel {
         h = 1.0;
         start = 180.0;
         extent = -90;
-        XYShapeAnnotation zoneOfUselessnes = new XYShapeAnnotation(
-                new Arc2D.Double(x, y, w, h, start, extent, Arc2D.OPEN), line, Color.ORANGE);
-        XYTextAnnotation zoneOfUselessnesText = new XYTextAnnotation("Zone of Uselessness", 0.8, 0.8);
-        zoneOfUselessnesText.setRotationAngle(textAngle);
-        zoneOfUselessnesText.setFont(textFont);
+        XYShapeAnnotation zoneOfUselessnes = new XYShapeAnnotation(new Arc2D.Double(x, y, w, h, start, extent, Arc2D.OPEN), line, Color.ORANGE);
+        zoneOfUselessnesAnnotation = new XYTextAnnotation(UI.getString("DispersionChartPanel.components.chart.zoneOfUselessness"), 0.8, 0.8);
+        zoneOfUselessnesAnnotation.setRotationAngle(textAngle);
+        zoneOfUselessnesAnnotation.setFont(textFont);
 
         plot.addAnnotation(xAxisTop);
         plot.addAnnotation(xAxisBottom);
@@ -522,18 +631,18 @@ final class DispersionChartPanel extends JPanel {
         plot.addAnnotation(yAxisRight);
 
         plot.addAnnotation(mainSequence);
-        plot.addAnnotation(mainSequenceText);
+        plot.addAnnotation(mainSequenceAnnotation);
 
         plot.addAnnotation(zoneOfPain);
-        plot.addAnnotation(zoneOfPainText);
+        plot.addAnnotation(zoneOfPainAnnotation);
 
         plot.addAnnotation(zoneOfUselessnes);
-        plot.addAnnotation(zoneOfUselessnesText);
+        plot.addAnnotation(zoneOfUselessnesAnnotation);
 
         // Set the renderer for the points
         plot.setRenderer(0, createDotRenderer());
 
-        return chart;
+        return componentDispersionChart;
     }
 
     private XYSeriesCollection createDataset(boolean all, boolean acyclic, boolean cyclic) {
@@ -588,65 +697,66 @@ final class DispersionChartPanel extends JPanel {
         JPanel topPanel = createSplitPaneLeftTop();
 
         tableComponents = createTable();
-        JScrollPane scrollPane = new JScrollPane(tableComponents, //
+        scrollPaneComponents = new JScrollPane(tableComponents, //
                 ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, //
                 ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setBorder(BorderFactory.createTitledBorder("Components"));
+        scrollPaneComponents.setBorder(BorderFactory.createTitledBorder(UI.getString("DispersionChartPanel.components.table.titledBorder")));
 
         JPanel leftPanel = new JPanel(new BorderLayout(5, 5));
         leftPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         leftPanel.add(topPanel, BorderLayout.NORTH);
-        leftPanel.add(scrollPane, BorderLayout.CENTER);
+        leftPanel.add(scrollPaneComponents, BorderLayout.CENTER);
         return leftPanel;
     }
 
     private JPanel createSplitPaneLeftTop() {
-        JPanel panel = new JPanel();
-        panel.setLayout(new FlowLayout(FlowLayout.LEADING));
-        panel.setBorder(BorderFactory.createTitledBorder("Components display options"));
+        panelDisplayOptions = new JPanel();
+        panelDisplayOptions.setLayout(new FlowLayout(FlowLayout.LEADING));
+        panelDisplayOptions.setBorder(BorderFactory.createTitledBorder(UI.getString("DispersionChartPanel.components.display.titledBorder")));
 
-        JRadioButton radioButton1 = new JRadioButton("All", true);
-        JRadioButton radioButton2 = new JRadioButton("Acyclic");
-        JRadioButton radioButton3 = new JRadioButton("Cyclic");
+        radioButtonDisplayAll = new JRadioButton(UI.getString("DispersionChartPanel.components.display.all"), true);
+        radioButtonDisplayAcyclic = new JRadioButton(UI.getString("DispersionChartPanel.components.display.acyclic"));
+        radioButtonDisplayCyclic = new JRadioButton(UI.getString("DispersionChartPanel.components.display.cyclic"));
 
-        radioButton1.addActionListener(e -> showAll());
-        radioButton2.addActionListener(e -> showAcyclic(true));
-        radioButton3.addActionListener(e -> showAcyclic(false));
+        radioButtonDisplayAll.addActionListener(e -> showAll());
+        radioButtonDisplayAcyclic.addActionListener(e -> showAcyclic(true));
+        radioButtonDisplayCyclic.addActionListener(e -> showAcyclic(false));
 
         ButtonGroup group = new ButtonGroup();
-        group.add(radioButton1);
-        group.add(radioButton2);
-        group.add(radioButton3);
+        group.add(radioButtonDisplayAll);
+        group.add(radioButtonDisplayAcyclic);
+        group.add(radioButtonDisplayCyclic);
 
-        panel.add(radioButton1);
-        panel.add(radioButton2);
-        panel.add(radioButton3);
+        panelDisplayOptions.add(radioButtonDisplayAll);
+        panelDisplayOptions.add(radioButtonDisplayAcyclic);
+        panelDisplayOptions.add(radioButtonDisplayCyclic);
 
-        return panel;
+        return panelDisplayOptions;
     }
 
     private JPanel createSplitPaneRight() {
         JPanel topPanel = createSplitPaneRightTop();
 
-        ChartPanel chartPanel = new ChartPanel(chart);
+        ChartPanel chartPanel = new CustomChartPanel(chart);
 
         JPanel rightPanel = new JPanel(new BorderLayout(5, 5));
         rightPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-        JScrollPane scrollPane = new JScrollPane(chartPanel, //
+        scrollPaneChart = new JScrollPane(chartPanel, //
                 ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, //
                 ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setBorder(BorderFactory.createTitledBorder("Chart"));
+
+        scrollPaneChart.setBorder(BorderFactory.createTitledBorder(UI.getString("DispersionChartPanel.components.chart.titledBorder")));
 
         rightPanel.add(topPanel, BorderLayout.NORTH);
-        rightPanel.add(scrollPane, BorderLayout.CENTER);
+        rightPanel.add(scrollPaneChart, BorderLayout.CENTER);
 
         return rightPanel;
     }
 
     private JPanel createSplitPaneRightTop() {
-        JCheckBox backgroundCheckbox = new JCheckBox("Colorful background");
-        backgroundCheckbox.addActionListener(new ActionListener() {
+        checkboxColorfullBackground = new JCheckBox(UI.getString("DispersionChartPanel.components.chart.display.colorfullBackground"));
+        checkboxColorfullBackground.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 JCheckBox checkBox = (JCheckBox) e.getSource();
@@ -655,11 +765,11 @@ final class DispersionChartPanel extends JPanel {
             }
         });
 
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEADING));
-        panel.setBorder(BorderFactory.createTitledBorder("Chart options"));
+        panelChartDisplayOptions = new JPanel(new FlowLayout(FlowLayout.LEADING));
+        panelChartDisplayOptions.setBorder(BorderFactory.createTitledBorder(UI.getString("DispersionChartPanel.components.chart.display.titledBorder")));
 
-        panel.add(backgroundCheckbox);
-        return panel;
+        panelChartDisplayOptions.add(checkboxColorfullBackground);
+        return panelChartDisplayOptions;
     }
 
     private JTable createTable() {
@@ -742,11 +852,11 @@ final class DispersionChartPanel extends JPanel {
     }
 
     private void createTableCellPopupMenu(JTable table) {
-        JMenuItem copyCellItem = new JMenuItem("Copy table content as CSV to clipboard", new ImageIcon(Images.ACTION_COPY));
-        copyCellItem.addActionListener(e -> copyTableContentToClipboard());
+        menuItemCopyTableContent = new JMenuItem(UI.getString("DispersionChartPanel.components.table.copyTableContents"), new ImageIcon(Images.POPUP_COPY_24));
+        menuItemCopyTableContent.addActionListener(e -> copyTableContentToClipboard());
 
         JPopupMenu cellPopupMenu = new JPopupMenu();
-        cellPopupMenu.add(copyCellItem);
+        cellPopupMenu.add(menuItemCopyTableContent);
 
         table.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
@@ -776,12 +886,11 @@ final class DispersionChartPanel extends JPanel {
     }
 
     private void createTableHeaderPopupMenu(JTable table) {
-
-        JMenuItem copyColumnItem = new JMenuItem("Copy column to clipboard", new ImageIcon(Images.ACTION_COPY));
-        copyColumnItem.addActionListener(e -> copyColumnContentToClipboard());
+        menuItemCopyColumnContent = new JMenuItem(UI.getString("DispersionChartPanel.components.table.copyColumnContents"), new ImageIcon(Images.POPUP_COPY_24));
+        menuItemCopyColumnContent.addActionListener(e -> copyColumnContentToClipboard());
 
         JPopupMenu headerPopupMenu = new JPopupMenu();
-        headerPopupMenu.add(copyColumnItem);
+        headerPopupMenu.add(menuItemCopyColumnContent);
 
         table.getTableHeader().addMouseListener(new MouseAdapter() {
 
@@ -809,6 +918,35 @@ final class DispersionChartPanel extends JPanel {
             }
         });
 
+    }
+
+    private void exportPng(JFreeChart chart, int width, int height) {
+        String description = UI.getString("DispersionChartPanel.components.chart.exportPng.description");
+        String extension = UI.getString("DispersionChartPanel.components.chart.exportPng.type");
+        final File fileToSave = UI.saveFile(this, description, extension);
+        if (fileToSave == null) {
+            return;
+        }
+        boolean canSave = true;
+        if (fileToSave.exists()) {
+            String title = UI.getString("DispersionChartPanel.components.chart.exportPng.existing.title");
+            String message = UI.getString("DispersionChartPanel.components.chart.exportPng.existing.message");
+            message = MessageFormat.format(message, fileToSave.getName());
+            canSave = UI.showConfirmation(this, title, message);
+        }
+        if (canSave) {
+            try {
+                ChartUtilities.saveChartAsPNG(fileToSave, chart, width, height);
+
+                String title = UI.getString("DispersionChartPanel.components.chart.exportPng.success.title");
+                String message = UI.getString("DispersionChartPanel.components.chart.exportPng.success.message");
+                UI.showInformation(this, title, message);
+            } catch (IOException e) {
+                e.printStackTrace();
+                String title = UI.getString("DispersionChartPanel.components.chart.exportPng.error.title");
+                UI.showError(this, title, e);
+            }
+        }
     }
 
     private List<PlotData> readCsv(File csv) throws IOException {

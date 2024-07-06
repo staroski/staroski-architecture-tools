@@ -8,6 +8,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.plaf.metal.MetalLookAndFeel;
 
 import br.com.staroski.tools.analysis.ui.AnalysisToolsUI;
+import br.com.staroski.tools.analysis.ui.UI;
 
 /**
  * This class executes the user interface for the Staroski's Architecture Tools.
@@ -18,6 +19,8 @@ public final class Execute {
 
     public static void main(String... args) {
         try {
+            UI.setLocale(UI.BRAZIL);
+            
             // apply look and feel
             applyLookAndFeel();
 
