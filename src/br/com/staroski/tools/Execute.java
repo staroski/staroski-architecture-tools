@@ -19,8 +19,6 @@ public final class Execute {
 
     public static void main(String... args) {
         try {
-            UI.setLocale(UI.BRAZIL);
-            
             // apply look and feel
             applyLookAndFeel();
 
@@ -33,6 +31,7 @@ public final class Execute {
 
     private static void applyLookAndFeel() throws UnsupportedLookAndFeelException {
         try {
+            UI.setLocale(UI.UNITED_STATES);
             UIManager.setLookAndFeel(new MetalLookAndFeel());
             JFrame.setDefaultLookAndFeelDecorated(true);
             JDialog.setDefaultLookAndFeelDecorated(true);

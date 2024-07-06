@@ -11,7 +11,7 @@ The tool reads a CSV file containing metrics for each component, including:
 - **Name**: Component name;
 - **D**: Distance from the "Main Sequence" (a decimal value between 0.0 and 1.0);
 - **I**: Instability (a decimal value between 0.0 and 1.0);
-- **A**: Abstraction (a decimal value between 0.0 and 1.0);
+- **A**: Abstractness (a decimal value between 0.0 and 1.0);
 - **Na**: Number of abstract types (an integer);
 - **Nc**: Number of concrete types (an integer);
 - **Ce**: Efferent coupling, i.e., outgoing dependencies (an integer);

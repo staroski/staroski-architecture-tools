@@ -589,9 +589,11 @@ final class DispersionChartPanel extends JPanel {
                 new float[] { 5.0f, 5.0f }, 0.0f);
 
         XYLineAnnotation xAxisTop = new XYLineAnnotation(0, 1, 1, 1, dashes, Color.BLACK);
+        XYLineAnnotation xAxisCenter = new XYLineAnnotation(0, 0.5, 1, 0.5, dashes, Color.BLACK);
         XYLineAnnotation xAxisBottom = new XYLineAnnotation(0, 0, 1, 0, line, Color.BLACK);
 
         XYLineAnnotation yAxisLeft = new XYLineAnnotation(0, 0, 0, 1, line, Color.BLACK);
+        XYLineAnnotation yAxisCenter = new XYLineAnnotation(0.5, 0, 0.5, 1, dashes, Color.BLACK);
         XYLineAnnotation yAxisRight = new XYLineAnnotation(1, 0, 1, 1, dashes, Color.BLACK);
 
         Font textFont = new Font("SansSerif", Font.PLAIN, 18);
@@ -625,9 +627,11 @@ final class DispersionChartPanel extends JPanel {
         zoneOfUselessnesAnnotation.setFont(textFont);
 
         plot.addAnnotation(xAxisTop);
+        plot.addAnnotation(xAxisCenter);
         plot.addAnnotation(xAxisBottom);
 
         plot.addAnnotation(yAxisLeft);
+        plot.addAnnotation(yAxisCenter);
         plot.addAnnotation(yAxisRight);
 
         plot.addAnnotation(mainSequence);
