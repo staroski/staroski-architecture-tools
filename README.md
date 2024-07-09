@@ -52,11 +52,13 @@ Navigate to the directory where the program is located and execute it with the f
 java br.com.staroski.tools.Execute
 ```
 
-Use the "**File -> Import CSV**" menu to import the [CSV file](metrics.csv) into the program.
+Use the "**File -> Import CSV file**" menu to import an [CSV file](metrics.csv) into the program.
 
-On the left panel you will see the **Components Metrics**.
+Use the "**Language**" menu to switch between **English (USA)**, **German** and **Portuguese (Brazil)**.
 
-On the right panel you will see the **Component Dispersion Chart**.
+On the left panel you will see the **Components** and its metrics.
+
+On the right panel you will see the visual presentation of that metrics on a **Component Scatterplot**.
 
 The selected components will be rendered in **red** and the unselected in **blue**: 
 
