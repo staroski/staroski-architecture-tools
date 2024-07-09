@@ -13,6 +13,7 @@ import java.nio.file.StandardOpenOption;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -29,7 +30,7 @@ import javax.swing.WindowConstants;
  * @author Staroski, Ricardo Artur
  */
 @SuppressWarnings("serial")
-public final class AnalysisToolsUI extends JFrame {
+public final class AnalysisToolsUI extends JFrame implements I18N {
 
     private JMenu menuFile;
     private JMenuItem menuItemImportCSV;
@@ -40,6 +41,7 @@ public final class AnalysisToolsUI extends JFrame {
     private JMenuItem menuItemEnUs;
     private JMenuItem menuItemDeDe;
     private DispersionChartPanel dispersionChartPanel;
+    private JMenuItem menuItemMetricsAnalyzer;
 
     public AnalysisToolsUI() {
         super(UI.getString("AnalysisToolsUI.title"));
@@ -68,17 +70,13 @@ public final class AnalysisToolsUI extends JFrame {
     }
 
     @Override
-    public void validate() {
-        super.validate();
-        applyI18N();
-    }
-
-    private void applyI18N() {
+    public void onLocaleChange(Locale newLocale) {
         setTitle(UI.getString("AnalysisToolsUI.title"));
 
         menuFile.setText(UI.getString("AnalysisToolsUI.menu.file"));
         menuItemImportCSV.setText(UI.getString("AnalysisToolsUI.menu.file.importCSV"));
         menuItemExportCSV.setText(UI.getString("AnalysisToolsUI.menu.file.exportCSV"));
+        menuItemMetricsAnalyzer.setText(UI.getString("AnalysisToolsUI.menu.file.metricsAnalyzer"));
         menuItemExit.setText(UI.getString("AnalysisToolsUI.menu.file.exit"));
 
         menuLanguage.setText(UI.getString("AnalysisToolsUI.menu.language"));
@@ -115,20 +113,30 @@ public final class AnalysisToolsUI extends JFrame {
     private JMenu createMenuFile() {
         menuFile = new JMenu(UI.getString("AnalysisToolsUI.menu.file"));
 
-        menuItemImportCSV = new JMenuItem(UI.getString("AnalysisToolsUI.menu.file.importCSV"));
+        menuItemImportCSV = new JMenuItem(UI.getString("AnalysisToolsUI.menu.file.importCSV"), new ImageIcon(Images.IMPORT_CSV_24));
         menuItemImportCSV.addActionListener(event -> importCsv());
 
-        menuItemExportCSV = new JMenuItem(UI.getString("AnalysisToolsUI.menu.file.exportCSV"));
+        menuItemExportCSV = new JMenuItem(UI.getString("AnalysisToolsUI.menu.file.exportCSV"), new ImageIcon(Images.EXPORT_CSV_24));
         menuItemExportCSV.addActionListener(event -> exportCsv());
 
-        menuItemExit = new JMenuItem(UI.getString("AnalysisToolsUI.menu.file.exit"));
+        menuItemExit = new JMenuItem(UI.getString("AnalysisToolsUI.menu.file.exit"), new ImageIcon(Images.EXIT_24));
         menuItemExit.addActionListener(event -> askForExit());
+
+        menuItemMetricsAnalyzer = new JMenuItem(UI.getString("AnalysisToolsUI.menu.file.metricsAnalyzer"), new ImageIcon(Images.METRICS_ANALYZER_24));
+        menuItemMetricsAnalyzer.addActionListener(event -> openMetricsAnalyzer());
 
         menuFile.add(menuItemImportCSV);
         menuFile.add(menuItemExportCSV);
         menuFile.addSeparator();
+        menuFile.add(menuItemMetricsAnalyzer);
+        menuFile.addSeparator();
         menuFile.add(menuItemExit);
         return menuFile;
+    }
+
+    private void openMetricsAnalyzer() {
+        MetricsAnalyzerUI metricsAnalyzer = new MetricsAnalyzerUI(this);
+        metricsAnalyzer.setVisible(true);
     }
 
     private JMenu createMenuLanguage() {
@@ -150,6 +158,12 @@ public final class AnalysisToolsUI extends JFrame {
     }
 
     private void exportCsv() {
+        if (!dispersionChartPanel.hasData()) {
+            String title = UI.getString("AnalysisToolsUI.menu.file.exportCSV.warning.title");
+            String message = UI.getString("AnalysisToolsUI.menu.file.exportCSV.warning.message");
+            UI.showWarning(this, title, message);
+            return;
+        }
         String description = UI.getString("AnalysisToolsUI.menu.file.exportCSV.description");
         String extension = UI.getString("AnalysisToolsUI.menu.file.exportCSV.type");
         final File fileToSave = UI.saveFile(this, description, extension);

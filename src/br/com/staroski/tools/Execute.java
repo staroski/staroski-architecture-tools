@@ -5,7 +5,6 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
-import javax.swing.plaf.metal.MetalLookAndFeel;
 
 import br.com.staroski.tools.analysis.ui.AnalysisToolsUI;
 import br.com.staroski.tools.analysis.ui.UI;
@@ -32,9 +31,9 @@ public final class Execute {
     private static void applyLookAndFeel() throws UnsupportedLookAndFeelException {
         try {
             UI.setLocale(UI.UNITED_STATES);
-            UIManager.setLookAndFeel(new MetalLookAndFeel());
             JFrame.setDefaultLookAndFeelDecorated(true);
             JDialog.setDefaultLookAndFeelDecorated(true);
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Throwable t) {
             t.printStackTrace();
         }

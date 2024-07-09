@@ -89,7 +89,7 @@ import br.com.staroski.tools.analysis.generators.ScatterPlotGenerator;
  * @author Staroski, Ricardo Artur
  */
 @SuppressWarnings("serial")
-final class DispersionChartPanel extends JPanel {
+final class DispersionChartPanel extends JPanel implements I18N {
 
     private static class ComponentTableModel extends AbstractTableModel {
 
@@ -183,7 +183,7 @@ final class DispersionChartPanel extends JPanel {
         protected JPopupMenu createPopupMenu(boolean properties, boolean copy, boolean save, boolean print, boolean zoom) {
             JPopupMenu menu = new JPopupMenu();
 
-            saveAsPngItem = new JMenuItem(UI.getString("DispersionChartPanel.components.chart.exportPng"));
+            saveAsPngItem = new JMenuItem(UI.getString("DispersionChartPanel.components.chart.exportPng"), new ImageIcon(Images.EXPORT_PNG_24));
             saveAsPngItem.addActionListener(event -> doSaveAs());
             menu.add(saveAsPngItem);
 
@@ -394,6 +394,10 @@ final class DispersionChartPanel extends JPanel {
         add(splitPane, BorderLayout.CENTER);
     }
 
+    public boolean hasData() {
+        return allData != null && !allData.isEmpty();
+    }
+
     public String getCsvContent() {
         final StringBuilder csvBuilder = new StringBuilder();
 
@@ -436,13 +440,7 @@ final class DispersionChartPanel extends JPanel {
         }
     }
 
-    @Override
-    public void updateUI() {
-        super.updateUI();
-        applyI18N();
-    }
-
-    private void applyI18N() {
+    public void onLocaleChange(java.util.Locale newLocale) {
         if (panelDisplayOptions == null) {
             return;
         }
@@ -461,7 +459,7 @@ final class DispersionChartPanel extends JPanel {
         if (saveAsPngItem != null) {
             saveAsPngItem.setText(UI.getString("DispersionChartPanel.components.chart.exportPng"));
         }
-        
+
         menuItemCopyColumnContent.setText(UI.getString("DispersionChartPanel.components.table.copyColumnContents"));
         menuItemCopyTableContent.setText(UI.getString("DispersionChartPanel.components.table.copyTableContents"));
 
@@ -856,7 +854,7 @@ final class DispersionChartPanel extends JPanel {
     }
 
     private void createTableCellPopupMenu(JTable table) {
-        menuItemCopyTableContent = new JMenuItem(UI.getString("DispersionChartPanel.components.table.copyTableContents"), new ImageIcon(Images.POPUP_COPY_24));
+        menuItemCopyTableContent = new JMenuItem(UI.getString("DispersionChartPanel.components.table.copyTableContents"), new ImageIcon(Images.COPY_24));
         menuItemCopyTableContent.addActionListener(e -> copyTableContentToClipboard());
 
         JPopupMenu cellPopupMenu = new JPopupMenu();
@@ -890,7 +888,7 @@ final class DispersionChartPanel extends JPanel {
     }
 
     private void createTableHeaderPopupMenu(JTable table) {
-        menuItemCopyColumnContent = new JMenuItem(UI.getString("DispersionChartPanel.components.table.copyColumnContents"), new ImageIcon(Images.POPUP_COPY_24));
+        menuItemCopyColumnContent = new JMenuItem(UI.getString("DispersionChartPanel.components.table.copyColumnContents"), new ImageIcon(Images.COPY_24));
         menuItemCopyColumnContent.addActionListener(e -> copyColumnContentToClipboard());
 
         JPopupMenu headerPopupMenu = new JPopupMenu();

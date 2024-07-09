@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -13,6 +14,18 @@ import java.util.TreeSet;
  * @author Staroski, Ricardo Artur
  */
 public final class Projects {
+
+    private static final ProjectScanListener DUMMY_LISTENER = new ProjectScanListener() {
+
+        @Override
+        public void onProjectFound(Project project) {}
+
+        @Override
+        public void onDirectoryExit(File directory) {}
+
+        @Override
+        public void onDirectoryEnter(File directory) {}
+    };
 
     // cache to store projects by its directory
     private static final Map<String, Project> directoryCache = new HashMap<>();
@@ -51,12 +64,28 @@ public final class Projects {
      * Recursively scans the specified directory tree for projects.
      *
      * @param directory THe directory tree.
-     * @return A {@link Set} of {@link ProjectImpl}
+     * @return A {@link Set} of {@link Project}
      * @throws IOException If some IO error occurs.
      */
     public static Set<Project> scan(File directory) throws IOException {
+        return scan(directory, DUMMY_LISTENER);
+    }
+
+    /**
+     * Recursively scans the specified directory tree for projects.
+     *
+     * @param directory The directory tree.
+     * @param listener  The scan listener.
+     * @return A {@link Set} of {@link Project}
+     * @throws IOException If some IO error occurs.
+     */
+    public static Set<Project> scan(File directory, ProjectScanListener listener) throws IOException {
+        directory = Objects.requireNonNull(directory, "Directory cannot be null!");
+        if (!directory.isDirectory()) {
+            throw new IllegalArgumentException("\"" + directory.getCanonicalPath() + "\" is not a directory!");
+        }
         System.out.print("Scanning projects in \"" + directory.getAbsolutePath() + "\"...");
-        Set<Project> projects = scanRecursively(directory);
+        Set<Project> projects = scanRecursively(directory, listener != null ? listener : DUMMY_LISTENER);
         System.out.println("    Done!");
         return projects;
     }
@@ -83,20 +112,24 @@ public final class Projects {
         return containsProjectFile && containsClasspathFile;
     }
 
-    private static Set<Project> scanRecursively(File directory) throws IOException {
+    private static Set<Project> scanRecursively(File directory, ProjectScanListener listener) throws IOException {
+        assert listener != null;
+        listener.onDirectoryEnter(directory);
         Set<Project> projects = new TreeSet<>();
 
         File[] files = directory.listFiles();
         if (files != null) {
             for (File file : files) {
                 if (file.isDirectory()) {
-                    projects.addAll(scanRecursively(file));
+                    projects.addAll(scanRecursively(file, listener));
                 } else if (file.getName().equals(ProjectImpl.CLASSPATH_FILE)) {
                     Project project = Projects.get(directory);
                     projects.add(project);
+                    listener.onProjectFound(project);
                 }
             }
         }
+        listener.onDirectoryExit(directory);
         return projects;
     }
 

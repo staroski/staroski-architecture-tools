@@ -25,7 +25,16 @@ final class Images {
     public static final BufferedImage TOOLS_128 = read("/images/tools_128x128.png");
     public static final BufferedImage TOOLS_256 = read("/images/tools_256x256.png");
 
-    public static final BufferedImage POPUP_COPY_24 = resize(read("/images/copy_48x48.png"), 24, 24);
+    public static final BufferedImage IMPORT_CSV_24 = resize(read("/images/import_csv_48x48.png"), 24, 24);
+    public static final BufferedImage EXPORT_CSV_24 = resize(read("/images/export_csv_48x48.png"), 24, 24);
+    
+    public static final BufferedImage EXPORT_PNG_24 = resize(read("/images/export_png_48x48.png"), 24, 24);
+    
+    public static final BufferedImage COPY_24 = resize(read("/images/copy_48x48.png"), 24, 24);
+    
+    public static final BufferedImage METRICS_ANALYZER_24 = resize(read("/images/scatterplot_48x48.png"), 24, 24);
+    
+    public static final BufferedImage EXIT_24 = resize(read("/images/exit_48x48.png"), 24, 24);
 
     public static final BufferedImage LANGUAGE_PT_BR_24 = resize(read("/images/flag_brazil_40x40.png"), 24, 24);
     public static final BufferedImage LANGUAGE_EN_US_24 = resize(read("/images/flag_usa_40x40.png"), 24, 24);

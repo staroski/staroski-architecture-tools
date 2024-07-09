@@ -1,6 +1,7 @@
 package br.com.staroski.tools.analysis.ui;
 
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Frame;
 import java.awt.Window;
 import java.io.File;
@@ -35,7 +36,7 @@ public final class UI {
     public static synchronized Set<Locale> getLocales() {
         return new TreeSet<>(Arrays.asList(UNITED_STATES, GERMANY, BRAZIL));
     }
-    
+
     public static String getString(String property) {
         return UIManager.getString(property);
     }
@@ -76,7 +77,7 @@ public final class UI {
                 return description + " (*" + extension + ")";
             }
         });
-        
+
         int result = fileChooser.showSaveDialog(parent);
         if (result == JFileChooser.APPROVE_OPTION) {
             return fileChooser.getSelectedFile();
@@ -97,9 +98,8 @@ public final class UI {
             }
 
             Locale.setDefault(locale);
-            Window[] windows = Frame.getWindows();
-            for (Window window : windows) {
-                SwingUtilities.updateComponentTreeUI(window);
+            for (Window window : Frame.getWindows()) {
+                applyI18N(window, locale);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -107,10 +107,10 @@ public final class UI {
     }
 
     public static synchronized boolean showConfirmation(final Component parent, final String title, final String message) {
-        int optionType = JOptionPane.OK_CANCEL_OPTION;
+        int optionType = JOptionPane.YES_NO_OPTION;
         int messageType = JOptionPane.QUESTION_MESSAGE;
         int option = JOptionPane.showConfirmDialog(parent, message, title, optionType, messageType);
-        return option == JOptionPane.OK_OPTION;
+        return option == JOptionPane.YES_OPTION;
     }
 
     public static synchronized void showError(final Component owner, final String title, final Throwable error) {
@@ -127,6 +127,17 @@ public final class UI {
     public static synchronized void showWarning(final Component owner, final String title, final String message) {
         int messageType = JOptionPane.WARNING_MESSAGE;
         JOptionPane.showMessageDialog(owner, message, title, messageType);
+    }
+
+    private static void applyI18N(Component component, Locale locale) {
+        if (component instanceof I18N i18n) {
+            i18n.onLocaleChange(locale);
+        }
+        if (component instanceof Container container) {
+            for (Component child : container.getComponents()) {
+                applyI18N(child, locale);
+            }
+        }
     }
 
     private static JFileChooser getFileChooser() {
