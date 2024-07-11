@@ -1,6 +1,13 @@
 package br.com.staroski.tools.analysis.analyzers;
 
 import java.awt.AWTEventMulticaster;
+import java.io.File;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Set;
+
+import br.com.staroski.tools.analysis.Project;
+import br.com.staroski.tools.analysis.ProjectScanListener;
 
 /**
  * Utility class that allows adding and removing listeners without using collections.<br>
@@ -12,7 +19,24 @@ import java.awt.AWTEventMulticaster;
  * @author Staroski, Ricardo Artur
  */
 @SuppressWarnings("unchecked")
-final class Listeners implements DependencyAnalyzerListener, AbstractionAnalyzerListener, CouplingAnalyzerListener {
+final class Listeners implements DependencyAnalyzerListener, AbstractionAnalyzerListener, CouplingAnalyzerListener,
+        ProjectScanListener, MetricsAnalyzerListener {
+
+    public static MetricsAnalyzerListener addMetricsAnalyzerListener(MetricsAnalyzerListener existing, MetricsAnalyzerListener toAdd) {
+        return add(existing, toAdd);
+    }
+
+    public static MetricsAnalyzerListener removeMetricsAnalyzerListener(MetricsAnalyzerListener existing, MetricsAnalyzerListener toRemove) {
+        return remove(existing, toRemove);
+    }
+
+    public static ProjectScanListener addProjectScanListener(ProjectScanListener existing, ProjectScanListener toAdd) {
+        return add(existing, toAdd);
+    }
+
+    public static ProjectScanListener removeMProjectScanListener(ProjectScanListener existing, ProjectScanListener toRemove) {
+        return remove(existing, toRemove);
+    }
 
     public static CouplingAnalyzerListener addCouplingAnalyzerListener(CouplingAnalyzerListener existing, CouplingAnalyzerListener toAdd) {
         return add(existing, toAdd);
@@ -146,4 +170,39 @@ final class Listeners implements DependencyAnalyzerListener, AbstractionAnalyzer
         ((CouplingAnalyzerListener) b).onCouplingAnalysisFinished(event);
     }
 
+    @Override
+    public void onDirectoryEnter(File directory) {
+        ((ProjectScanListener) a).onDirectoryEnter(directory);
+        ((ProjectScanListener) b).onDirectoryEnter(directory);
+    }
+
+    @Override
+    public void onProjectFound(Project project) {
+        ((ProjectScanListener) a).onProjectFound(project);
+        ((ProjectScanListener) b).onProjectFound(project);
+    }
+
+    @Override
+    public void onDirectoryExit(File directory) {
+        ((ProjectScanListener) a).onDirectoryExit(directory);
+        ((ProjectScanListener) b).onDirectoryExit(directory);
+    }
+
+    @Override
+    public void onMetricsAnalysisStarted(Instant start) {
+        ((MetricsAnalyzerListener) a).onMetricsAnalysisStarted(start);
+        ((MetricsAnalyzerListener) b).onMetricsAnalysisStarted(start);
+    }
+
+    @Override
+    public void onMetricsCollected(Set<Project> projects) {
+        ((MetricsAnalyzerListener) a).onMetricsCollected(projects);
+        ((MetricsAnalyzerListener) b).onMetricsCollected(projects);
+    }
+
+    @Override
+    public void onMetricsAnalysisFinished(Instant end, Duration elapsed) {
+        ((MetricsAnalyzerListener) a).onMetricsAnalysisFinished(end, elapsed);
+        ((MetricsAnalyzerListener) b).onMetricsAnalysisFinished(end, elapsed);
+    }
 }

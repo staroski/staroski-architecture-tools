@@ -7,6 +7,7 @@ import java.awt.Window;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map.Entry;
@@ -37,35 +38,17 @@ public final class UI {
         return new TreeSet<>(Arrays.asList(UNITED_STATES, GERMANY, BRAZIL));
     }
 
-    public static String getString(String property) {
-        return UIManager.getString(property);
-    }
-
-    public static synchronized File openFile(final Component parent, final String description, final String extension) {
-        final JFileChooser fileChooser = getFileChooser();
-
-        fileChooser.setFileFilter(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return file.isDirectory() || file.getName().toLowerCase().endsWith(extension.toLowerCase());
-            }
-
-            @Override
-            public String getDescription() {
-                return description + " (*" + extension + ")";
-            }
-        });
-
-        int result = fileChooser.showOpenDialog(parent);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            return fileChooser.getSelectedFile();
+    public static String getText(String property, Object... params) {
+        String message = UIManager.getString(property);
+        if (params != null && params.length > 0) {
+            message = MessageFormat.format(message, params);
         }
-        return null;
+        return message;
     }
 
     public static synchronized File saveFile(final Component parent, final String description, final String extension) {
         JFileChooser fileChooser = getFileChooser();
-
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         fileChooser.setFileFilter(new FileFilter() {
             @Override
             public boolean accept(File file) {
@@ -79,6 +62,45 @@ public final class UI {
         });
 
         int result = fileChooser.showSaveDialog(parent);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            return fileChooser.getSelectedFile();
+        }
+        return null;
+    }
+
+    public static synchronized File selectDirectory(final Component parent) {
+        return selectDirectory(parent, null);
+    }
+
+    public static synchronized File selectDirectory(final Component parent, File startIn) {
+        final JFileChooser fileChooser = getFileChooser();
+        if (startIn != null) {
+            fileChooser.setCurrentDirectory(startIn);
+        }
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        int result = fileChooser.showOpenDialog(parent);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            return fileChooser.getSelectedFile();
+        }
+        return null;
+    }
+
+    public static synchronized File selectFile(final Component parent, final String description, final String extension) {
+        final JFileChooser fileChooser = getFileChooser();
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setFileFilter(new FileFilter() {
+            @Override
+            public boolean accept(File file) {
+                return file.isDirectory() || file.getName().toLowerCase().endsWith(extension.toLowerCase());
+            }
+
+            @Override
+            public String getDescription() {
+                return description + " (*" + extension + ")";
+            }
+        });
+
+        int result = fileChooser.showOpenDialog(parent);
         if (result == JFileChooser.APPROVE_OPTION) {
             return fileChooser.getSelectedFile();
         }

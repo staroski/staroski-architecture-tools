@@ -2,11 +2,12 @@ package br.com.staroski.tools.analysis.analyzers;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
 
-import com.github.javaparser.StaticJavaParser;
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 
@@ -45,6 +46,13 @@ public final class AbstractionAnalyzer {
     }
 
     private AbstractionAnalyzerListener listener = new InternalListener();
+
+    private final JavaParser javaParser;
+
+    public AbstractionAnalyzer() {
+        ParserConfiguration config = new ParserConfiguration().setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_17);
+        javaParser = new JavaParser(config);
+    }
 
     public void addAbstractionAnalyzerListener(AbstractionAnalyzerListener listener) {
         this.listener = Listeners.addAbstractionAnalyzerListener(this.listener, listener);
@@ -89,14 +97,15 @@ public final class AbstractionAnalyzer {
         }
     }
 
-    @SuppressWarnings("deprecation")
     private void updateStats(Project project, Path sourcePath) {
         try {
             File file = sourcePath.toFile();
 
             listener.onFileParsingStarted(new AbstractionAnalysisEvent(project, file));
 
-            CompilationUnit compilationUnit = StaticJavaParser.parse(sourcePath, StandardCharsets.ISO_8859_1);
+            String sourceCode = new String(Files.readAllBytes(sourcePath));
+
+            CompilationUnit compilationUnit = javaParser.parse(sourceCode).getResult().get();
 
             listener.onFileParsingFinished(new AbstractionAnalysisEvent(project, file));
 
