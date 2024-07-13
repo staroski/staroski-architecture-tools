@@ -9,9 +9,13 @@ import java.io.File;
  */
 public interface ProjectScanListener {
 
+    public void onProjectScanStarted(File directory);
+    
     public void onDirectoryEnter(File directory);
 
     public void onProjectFound(Project project);
 
     public void onDirectoryExit(File directory);
+    
+    public void onProjectScanFinished(File directory);
 }

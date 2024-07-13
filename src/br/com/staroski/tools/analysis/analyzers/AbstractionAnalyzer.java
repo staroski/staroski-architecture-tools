@@ -23,29 +23,7 @@ import br.com.staroski.tools.analysis.Project;
  */
 public final class AbstractionAnalyzer {
 
-    private final class InternalListener implements AbstractionAnalyzerListener {
-
-        @Override
-        public void onAbstractionAnalysisStarted(AbstractionAnalysisEvent event) {
-            System.out.println("Abstraction analysis of name \"" + event.getProject().getName() + "\" started...");
-        }
-
-        public void onAbstractionAnalysisFinished(AbstractionAnalysisEvent event) {
-            System.out.println("Abstraction analysis of name \"" + event.getProject().getName() + "\" done!");
-        }
-
-        @Override
-        public void onFileParsingStarted(AbstractionAnalysisEvent event) {
-            System.out.println("    Parsing \"" + event.getFile().getName() + "\"...");
-        }
-
-        @Override
-        public void onFileParsingFinished(AbstractionAnalysisEvent event) {
-            System.out.println("    Parsing \"" + event.getFile().getName() + "\" finished!");
-        }
-    }
-
-    private AbstractionAnalyzerListener listener = new InternalListener();
+    private AbstractionAnalyzerListener listener = new DefaultAbstractionAnalyzerListener();
 
     private final JavaParser javaParser;
 

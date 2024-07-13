@@ -6,7 +6,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Set;
 
-import br.com.staroski.tools.analysis.Metrics;
 import br.com.staroski.tools.analysis.Project;
 import br.com.staroski.tools.analysis.Projects;
 
@@ -18,60 +17,28 @@ import br.com.staroski.tools.analysis.Projects;
  */
 public final class MetricsAnalyzer {
 
-    private class InternalMetricsAnalyzerListener implements MetricsAnalyzerListener {
-        @Override
-        public void onAbstractionAnalysisFinished(AbstractionAnalysisEvent event) {
-            System.out.println("onAbstractionAnalysisFinished: " + event.getProject().getName());
-        }
+    private class InternalMetricsAnalyzerListener extends DefaultMetricsAnalyzerListener {
 
         @Override
         public void onAbstractionAnalysisStarted(AbstractionAnalysisEvent event) {
-            System.out.println("onAbstractionAnalysisStarted: " + event.getProject().getName());
-        }
-
-        @Override
-        public void onCouplingAnalysisFinished(DependencyAnalysisEvent event) {
-            System.out.println("onCouplingAnalysisFinished: " + event.getProject().getName());
+            System.out.println("Running abstraction analysis for project \"" + event.getProject().getName() + "\"");
         }
 
         @Override
         public void onCouplingAnalysisStarted(DependencyAnalysisEvent event) {
-            System.out.println("onCouplingAnalysisStarted: " + event.getProject().getName());
-        }
-
-        @Override
-        public void onCycleAnalysisFinished(DependencyAnalysisEvent event) {
-            System.out.println("onCycleAnalysisFinished: " + event.getProject().getName());
+            System.out.println("Running coupling analysis for project \"" + event.getProject().getName() + "\"");
         }
 
         @Override
         public void onCycleAnalysisStarted(DependencyAnalysisEvent event) {
-            System.out.println("onCycleAnalysisStarted: " + event.getProject().getName());
+            System.out.println("Running cycle analysis for project \"" + event.getProject().getName() + "\"");
         }
 
         @Override
         public void onDirectoryEnter(File directory) {
             try {
-                System.out.println("onDirectoryEnter: " + directory.getCanonicalPath());
+                System.out.println("Scanning directory \"" + directory.getCanonicalPath() + "\"");
             } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        @Override
-        public void onDirectoryExit(File directory) {
-            try {
-                System.out.println("onDirectoryExit: " + directory.getCanonicalPath());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        @Override
-        public void onFileParsingFinished(AbstractionAnalysisEvent event) {
-            try {
-                System.out.println("onFileParsingFinished: " + event.getFile().getAbsolutePath());
-            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -79,7 +46,7 @@ public final class MetricsAnalyzer {
         @Override
         public void onFileParsingStarted(AbstractionAnalysisEvent event) {
             try {
-                System.out.println("onFileParsingStarted: " + event.getFile().getAbsolutePath());
+                System.out.println("Reading file \"" + event.getFile().getAbsolutePath() + "\"");
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -87,39 +54,38 @@ public final class MetricsAnalyzer {
 
         @Override
         public void onMetricsAnalysisFinished(Instant end, Duration elapsed) {
-            System.out.printf("onMetricsAnalysisFinished duration: %02d:%02d:%02d%n",
+            System.out.printf("Metrics Analysis Finished in %02d:%02d:%02d%n",
                     elapsed.toHours(), elapsed.toMinutesPart(), elapsed.toSecondsPart());
         }
 
         @Override
         public void onMetricsAnalysisStarted(Instant start) {
-            System.out.println("onMetricsAnalysisStarted");
+            System.out.println("Metrics Analysis Started");
         }
 
         @Override
         public void onMetricsCollected(Set<Project> projects) {
-            // print stats
-            System.out.printf("onMetricsCollected %d projects%n", projects.size());
-            System.out.println("Name,D,I,A,Ce,Ca,Nc,Na,DAG");
-            for (Project project : projects) {
-                Metrics m = project.getMetrics();
-                String name = project.getName();
-                String d = String.format("%.2f", m.getDistance());
-                String i = String.format("%.2f", m.getInstability());
-                String a = String.format("%.2f", m.getAbstractness());
-                int ce = m.getOutputDependencies();
-                int ca = m.getInputDependencies();
-                int nc = m.getConcreteTypes();
-                int na = m.getAbstractTypes();
-                int dag = m.isAcyclic() ? 1 : 0;
+            System.out.printf("%nCollected metrics for %d projects%n", projects.size());
+            System.out.println("\n" + Projects.getMetricsCsv(projects) + "\n");
+        }
 
-                System.out.printf("%s,%s,%s,%s,%d,%d,%d,%d,%d%n", name, d, i, a, ce, ca, nc, na, dag);
+        @Override
+        public void onProjectScanStarted(File directory) {
+            try {
+                System.out.println("Scanning for projects in \"" + directory.getCanonicalPath() + "\"");
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
 
         @Override
         public void onProjectFound(Project project) {
-            System.out.println("onProjectFound: " + project.getName());
+            System.out.println("Project found: \"" + project.getName() + "\"");
+        }
+
+        @Override
+        public void onProjectScanFinished(File directory) {
+            System.out.println("Scanning for projects finished!");
         }
     }
 

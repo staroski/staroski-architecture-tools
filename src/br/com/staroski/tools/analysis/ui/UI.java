@@ -3,6 +3,11 @@ package br.com.staroski.tools.analysis.ui;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Frame;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.MouseInfo;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.Window;
 import java.io.File;
 import java.io.IOException;
@@ -34,6 +39,28 @@ public final class UI {
 
     private static JFileChooser fileChooser;
 
+    public static void centralizeOnActiveScreen(Window window) {
+        Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
+        GraphicsDevice[] devices = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
+        GraphicsDevice currentDevice = null;
+        for (GraphicsDevice device : devices) {
+            Rectangle bounds = device.getDefaultConfiguration().getBounds();
+            if (bounds.contains(mouseLocation)) {
+                currentDevice = device;
+                break;
+            }
+        }
+        if (currentDevice != null) {
+            Rectangle screenBounds = currentDevice.getDefaultConfiguration().getBounds();
+            Rectangle windowBounds = window.getBounds();
+            int x = screenBounds.x + (screenBounds.width - windowBounds.width) / 2;
+            int y = screenBounds.y + (screenBounds.height - windowBounds.height) / 2;
+            window.setLocation(x, y);
+        } else {
+            window.setLocationRelativeTo(null);
+        }
+    }
+    
     public static synchronized Set<Locale> getLocales() {
         return new TreeSet<>(Arrays.asList(UNITED_STATES, GERMANY, BRAZIL));
     }

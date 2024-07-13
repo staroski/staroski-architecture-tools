@@ -17,20 +17,7 @@ import br.com.staroski.tools.analysis.Project;
  */
 public final class CouplingAnalyzer {
 
-    private final class InternalListener implements CouplingAnalyzerListener {
-
-        @Override
-        public void onCouplingAnalysisStarted(CouplingAnalysisEvent event) {
-            System.out.println("Coupling analysis of project \"" + event.getProject().getName() + "\" started...");
-        }
-
-        @Override
-        public void onCouplingAnalysisFinished(CouplingAnalysisEvent event) {
-            System.out.println("Coupling analysis of project \"" + event.getProject().getName() + "\" finished!");
-        }
-    }
-
-    private CouplingAnalyzerListener listener = new InternalListener();
+    private CouplingAnalyzerListener listener = new DefaultCouplingAnalyzerListener();
 
     public void addCouplingAnalyzerListener(CouplingAnalyzerListener listener) {
         this.listener = Listeners.addCouplingAnalyzerListener(this.listener, listener);

@@ -171,6 +171,12 @@ final class Listeners implements DependencyAnalyzerListener, AbstractionAnalyzer
     }
 
     @Override
+    public void onProjectScanStarted(File directory) {
+        ((ProjectScanListener) a).onProjectScanStarted(directory);
+        ((ProjectScanListener) b).onProjectScanStarted(directory);
+    }
+
+    @Override
     public void onDirectoryEnter(File directory) {
         ((ProjectScanListener) a).onDirectoryEnter(directory);
         ((ProjectScanListener) b).onDirectoryEnter(directory);
@@ -186,6 +192,12 @@ final class Listeners implements DependencyAnalyzerListener, AbstractionAnalyzer
     public void onDirectoryExit(File directory) {
         ((ProjectScanListener) a).onDirectoryExit(directory);
         ((ProjectScanListener) b).onDirectoryExit(directory);
+    }
+
+    @Override
+    public void onProjectScanFinished(File directory) {
+        ((ProjectScanListener) a).onProjectScanFinished(directory);
+        ((ProjectScanListener) b).onProjectScanFinished(directory);
     }
 
     @Override

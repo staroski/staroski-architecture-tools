@@ -47,7 +47,6 @@ public final class AnalysisToolsUI extends JFrame implements I18N {
         setIconImages(createIcons());
         setMinimumSize(new Dimension(640, 480));
         setSize(new Dimension(1366, 768));
-        setLocationRelativeTo(null);
 
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
@@ -66,6 +65,8 @@ public final class AnalysisToolsUI extends JFrame implements I18N {
         mainPanel.add(dispersionChartPanel, BorderLayout.CENTER);
 
         setContentPane(mainPanel);
+
+        UI.centralizeOnActiveScreen(this);
     }
 
     @Override
@@ -135,6 +136,7 @@ public final class AnalysisToolsUI extends JFrame implements I18N {
 
     private void openMetricsAnalyzer() {
         MetricsCollectorUI metricsAnalyzer = new MetricsCollectorUI(this);
+        metricsAnalyzer.withCsvConsumer(csv -> dispersionChartPanel.setCsvString(csv));
         metricsAnalyzer.setVisible(true);
     }
 
@@ -177,7 +179,7 @@ public final class AnalysisToolsUI extends JFrame implements I18N {
         }
         if (canSave) {
             try {
-                final String csv = dispersionChartPanel.getCsvContent();
+                final String csv = dispersionChartPanel.getCsvString();
 
                 OpenOption[] options = {
                         StandardOpenOption.CREATE,

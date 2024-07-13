@@ -15,31 +15,9 @@ import br.com.staroski.tools.analysis.Project;
  */
 public final class DependencyAnalyzer {
 
-    private class InternalListener implements DependencyAnalyzerListener {
- 
-        @Override
-        public void onCouplingAnalysisStarted(DependencyAnalysisEvent event) {
-            System.out.println("Coupling analysis of project \"" + event.getProject().getName() + "\" started...");
-        }
-
-        @Override
-        public void onCouplingAnalysisFinished(DependencyAnalysisEvent event) {
-            System.out.println("Coupling analysis of project \"" + event.getProject().getName() + "\" finished!");
-        }
-
-        public void onCycleAnalysisStarted(DependencyAnalysisEvent event) {
-            System.out.println("Circular dependencies analysis of project \"" + event.getProject().getName() + "\" started...");
-        };
-
-        @Override
-        public void onCycleAnalysisFinished(DependencyAnalysisEvent event) {
-            System.out.println("Circular dependencies analysis of project \"" + event.getProject().getName() + "\" finished!");
-        }
-    }
-    
     private final CycleChecker cycleChecker = new CycleChecker();
 
-    private DependencyAnalyzerListener listener = new InternalListener();
+    private DependencyAnalyzerListener listener = new DefaultDependencyAnalyzerListener();
 
     public DependencyAnalyzer() {}
 
