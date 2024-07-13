@@ -3,6 +3,7 @@ package br.com.staroski.tools.analysis;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -14,6 +15,8 @@ import java.util.TreeSet;
  * @author Staroski, Ricardo Artur
  */
 public final class Projects {
+
+    public static final Locale UNITED_STATES = new Locale("en", "US");
 
     private static final ProjectScanListener DUMMY_LISTENER = new ProjectScanListener() {
 
@@ -74,18 +77,19 @@ public final class Projects {
      */
     public static String getMetricsCsv(Set<Project> projects) {
         StringBuilder csv = new StringBuilder("Name,D,I,A,Na,Nc,Ce,Ca,DAG");
+
         for (Project project : projects) {
             Metrics m = project.getMetrics();
             String name = project.getName();
-            String d = String.format("%.2f", m.getDistance());
-            String i = String.format("%.2f", m.getInstability());
-            String a = String.format("%.2f", m.getAbstractness());
+            String d = String.format(UNITED_STATES, "%.2f", m.getDistance());
+            String i = String.format(UNITED_STATES, "%.2f", m.getInstability());
+            String a = String.format(UNITED_STATES, "%.2f", m.getAbstractness());
             int na = m.getAbstractTypes();
             int nc = m.getConcreteTypes();
             int ce = m.getOutputDependencies();
             int ca = m.getInputDependencies();
             int dag = m.isAcyclic() ? 1 : 0;
-            csv.append(String.format("%n%s,%s,%s,%s,%d,%d,%d,%d,%d", name, d, i, a, na, nc, ce, ca, dag));
+            csv.append(String.format(UNITED_STATES, "%n%s,%s,%s,%s,%d,%d,%d,%d,%d", name, d, i, a, na, nc, ce, ca, dag));
         }
         return csv.toString();
     }

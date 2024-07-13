@@ -26,9 +26,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.io.StringReader;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -394,10 +396,6 @@ final class DispersionChartPanel extends JPanel implements I18N {
         add(splitPane, BorderLayout.CENTER);
     }
 
-    public boolean hasData() {
-        return allData != null && !allData.isEmpty();
-    }
-
     public String getCsvString() {
         final StringBuilder csvBuilder = new StringBuilder();
 
@@ -429,19 +427,8 @@ final class DispersionChartPanel extends JPanel implements I18N {
         return csvBuilder.toString();
     }
 
-    public void setCsvString(String csv) {
-        this.allData = readCsv(csv);
-        showAll();
-    }
-
-    public void setCsvFile(File file) {
-        try {
-            this.allData = readCsv(file);
-            showAll();
-        } catch (IOException e) {
-            e.printStackTrace();
-            UI.showError(this, "Error", e);
-        }
+    public boolean hasData() {
+        return allData != null && !allData.isEmpty();
     }
 
     public void onLocaleChange(java.util.Locale newLocale) {
@@ -469,6 +456,26 @@ final class DispersionChartPanel extends JPanel implements I18N {
 
         applyI18NTable();
         applyI18NChart();
+    }
+
+    public void setCsvFile(File file) {
+        try {
+            this.allData = readCsv(file);
+            showAll();
+        } catch (Exception e) {
+            e.printStackTrace();
+            UI.showError(this, "Error", e);
+        }
+    }
+
+    public void setCsvString(String csv) {
+        try {
+            this.allData = readCsv(csv);
+            showAll();
+        } catch (Exception e) {
+            e.printStackTrace();
+            UI.showError(this, "Error", e);
+        }
     }
 
     private void applyI18NChart() {
@@ -954,54 +961,40 @@ final class DispersionChartPanel extends JPanel implements I18N {
         }
     }
 
-    private List<PlotData> readCsv(File csv) throws IOException {
-        List<PlotData> allData = new ArrayList<>();
-
-        try (BufferedReader br = new BufferedReader(new FileReader(csv))) {
-            String line = br.readLine(); // Name,D,I,A,Na,Nc,Ce,Ca,DAG
-            while ((line = br.readLine()) != null) { // data
-                String[] values = line.split(",");
-                int col = 0;
-                String name = values[col++].trim();
-                double d = Double.parseDouble(values[col++].trim());
-                double i = Double.parseDouble(values[col++].trim());
-                double a = Double.parseDouble(values[col++].trim());
-                int na = Integer.parseInt(values[col++].trim());
-                int nc = Integer.parseInt(values[col++].trim());
-                int ce = Integer.parseInt(values[col++].trim());
-                int ca = Integer.parseInt(values[col++].trim());
-                boolean dag = Integer.parseInt(values[col++].trim()) > 0;
-                PlotData data = new PlotData(name, d, i, a, na, nc, ce, ca, dag);
-                allData.add(data);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private List<PlotData> readCsv(File csv) throws Exception {
+        Reader in = new FileReader(csv);
+        List<PlotData> allData = readCsvData(in);
+        in.close();
         return allData;
     }
 
-    private List<PlotData> readCsv(String csvContent) {
-        List<PlotData> allData = new ArrayList<>();
+    private List<PlotData> readCsv(String csvContent) throws Exception {
+        Reader in = new StringReader(csvContent);
+        List<PlotData> allData = readCsvData(in);
+        in.close();
+        return allData;
+    }
 
-        try (BufferedReader br = new BufferedReader(new StringReader(csvContent))) {
-            String line = br.readLine(); // Name,D,I,A,Na,Nc,Ce,Ca,DAG
-            while ((line = br.readLine()) != null) { // data
-                String[] values = line.split(",");
-                int col = 0;
-                String name = values[col++].trim();
-                double d = Double.parseDouble(values[col++].trim());
-                double i = Double.parseDouble(values[col++].trim());
-                double a = Double.parseDouble(values[col++].trim());
-                int na = Integer.parseInt(values[col++].trim());
-                int nc = Integer.parseInt(values[col++].trim());
-                int ce = Integer.parseInt(values[col++].trim());
-                int ca = Integer.parseInt(values[col++].trim());
-                boolean dag = Integer.parseInt(values[col++].trim()) > 0;
-                PlotData data = new PlotData(name, d, i, a, na, nc, ce, ca, dag);
-                allData.add(data);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+    private List<PlotData> readCsvData(Reader in) throws Exception {
+        List<PlotData> allData = new ArrayList<>();
+        NumberFormat format = NumberFormat.getInstance(UI.UNITED_STATES);
+        BufferedReader br = new BufferedReader(in);
+        String line = br.readLine(); // Name,D,I,A,Na,Nc,Ce,Ca,DAG
+        while ((line = br.readLine()) != null) { // data
+            String[] values = line.split(",");
+            int col = 0;
+            String name = values[col++].trim();
+
+            double d = format.parse(values[col++].trim()).doubleValue();
+            double i = format.parse(values[col++].trim()).doubleValue();
+            double a = format.parse(values[col++].trim()).doubleValue();
+            int na = format.parse(values[col++].trim()).intValue();
+            int nc = format.parse(values[col++].trim()).intValue();
+            int ce = format.parse(values[col++].trim()).intValue();
+            int ca = format.parse(values[col++].trim()).intValue();
+            boolean dag = format.parse(values[col++].trim()).intValue() > 0;
+            PlotData data = new PlotData(name, d, i, a, na, nc, ce, ca, dag);
+            allData.add(data);
         }
         return allData;
     }

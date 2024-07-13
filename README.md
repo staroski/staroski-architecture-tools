@@ -46,10 +46,14 @@ To use the Component Dispersion Chart tool:
 
 ### Running the Program
 
-Navigate to the directory where the program is located and execute it with the following command:
+**Attention** you need a [JRE - Java Runtime Environment](https://adoptium.net/temurin/releases/?package=jre&version=20) installed in order to execute the tool.
+
+Download the [JAR](staroski-architecture-tools.jar) file to your computer and simple double-click it.
+
+If it not works then you can navigate to the directory where the [JAR](staroski-architecture-tools.jar) file is located and execute it in command line with:
 
 ```bash
-java br.com.staroski.tools.Execute
+java -jar staroski-architecture-tools.jar
 ```
 
 Use the "**File -> Import CSV file**" menu to import an [CSV file](metrics.csv) into the program.
