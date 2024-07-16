@@ -14,7 +14,7 @@ import br.com.staroski.tools.analysis.analyzers.DependencyAnalyzer;
 import br.com.staroski.utils.Arguments;
 
 /**
- * Traverses a directory tree and generates content for a CSV file with all the metrics computed for each {@link ProjectImpl} found.
+ * Traverses a directory tree and generates content for a CSV file with all the metrics computed for each {@link Project} found.
  *
  * @author Staroski, Ricardo Artur
  */

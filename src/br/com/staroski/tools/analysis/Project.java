@@ -4,8 +4,8 @@ import java.io.File;
 import java.util.Set;
 
 /**
- * This class represents a name.<br>
- * Instances of this class are created through the static method {@link Projects#get(File)} passing the name directory as parameter.<br>
+ * This interface represents a project.<br>
+ * Instances of this class are created through the static method {@link Projects#get(File)} passing the project directory as parameter.<br>
  * You can also get a list of projects inside a directory tree using the static method {@link Projects#scan(File)}.
  *
  * @author Staroski, Ricardo Artur

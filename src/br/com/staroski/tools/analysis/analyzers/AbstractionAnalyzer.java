@@ -2,12 +2,15 @@ package br.com.staroski.tools.analysis.analyzers;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
 
 import com.github.javaparser.JavaParser;
+import com.github.javaparser.ParseResult;
 import com.github.javaparser.ParserConfiguration;
+import com.github.javaparser.Problem;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 
@@ -17,7 +20,7 @@ import br.com.staroski.tools.analysis.MetricsVisitors;
 import br.com.staroski.tools.analysis.Project;
 
 /**
- * This class iterates over a {@link Set} of {@link ProjectImpl} and computes its number of <b>abstract types</b> ("Na") and <b>concrete types</b> ("Nc").
+ * This class iterates over a {@link Set} of {@link Project} and computes its number of <b>abstract types</b> ("Na") and <b>concrete types</b> ("Nc").
  *
  * @author Staroski, Ricardo Artur
  */
@@ -28,7 +31,10 @@ public final class AbstractionAnalyzer {
     private final JavaParser javaParser;
 
     public AbstractionAnalyzer() {
-        ParserConfiguration config = new ParserConfiguration().setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_17);
+        final Charset cp1252 = Charset.forName("Cp1252");
+		final ParserConfiguration config = new ParserConfiguration()
+        		.setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_17)
+        		.setCharacterEncoding(cp1252);
         javaParser = new JavaParser(config);
     }
 
@@ -77,25 +83,33 @@ public final class AbstractionAnalyzer {
 
     private void updateStats(Project project, Path sourcePath) {
         try {
-            File file = sourcePath.toFile();
+            final File file = sourcePath.toFile();
 
             listener.onFileParsingStarted(new AbstractionAnalysisEvent(project, file));
 
-            String sourceCode = new String(Files.readAllBytes(sourcePath));
-
-            CompilationUnit compilationUnit = javaParser.parse(sourceCode).getResult().get();
-
+            final Charset charset = javaParser.getParserConfiguration().getCharacterEncoding();
+			final String sourceCode = new String(Files.readAllBytes(sourcePath), charset);
+            final ParseResult<CompilationUnit> parsing = javaParser.parse(sourceCode);
+            
             listener.onFileParsingFinished(new AbstractionAnalysisEvent(project, file));
+            
+            if (parsing.isSuccessful()) {
+            	final CompilationUnit compilationUnit = parsing.getResult().get();
 
-            // Update name stats
-            final Metrics metrics = project.getMetrics();
-            compilationUnit.findAll(ClassOrInterfaceDeclaration.class).forEach(classOrInterface -> {
-                boolean isAbstract = classOrInterface.isInterface() || classOrInterface.isAbstract();
-                MetricsVisitor visitor = isAbstract //
-                        ? MetricsVisitors.incrementAbstractTypes()//
-                        : MetricsVisitors.incrementConcreteTypes();
-                metrics.accept(visitor);
-            });
+                final Metrics metrics = project.getMetrics();
+                compilationUnit.findAll(ClassOrInterfaceDeclaration.class).forEach(classOrInterface -> {
+                    boolean isAbstract = classOrInterface.isInterface() || classOrInterface.isAbstract();
+                    MetricsVisitor visitor = isAbstract //
+                            ? MetricsVisitors.incrementAbstractTypes()//
+                            : MetricsVisitors.incrementConcreteTypes();
+                    metrics.accept(visitor);
+                });            	
+            } else {
+            	System.err.println("Problems on \"" + file.getAbsolutePath() + "\":");
+            	for (Problem problem : parsing.getProblems()) {
+            		System.err.println("    " + problem.getMessage());
+            	}
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

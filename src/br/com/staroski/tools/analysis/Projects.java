@@ -16,9 +16,7 @@ import java.util.TreeSet;
  */
 public final class Projects {
 
-    public static final Locale UNITED_STATES = new Locale("en", "US");
-
-    private static final ProjectScanListener DUMMY_LISTENER = new ProjectScanListener() {
+    private static final ProjectScanListener EMPTY_LISTENER = new ProjectScanListener() {
 
         @Override
         public void onDirectoryEnter(File directory) {}
@@ -42,14 +40,14 @@ public final class Projects {
     /**
      * Gets a {@link Project} instance for the specified directory.
      *
-     * @param directory The name's directory.
-     * @return AN {@link Project}instance.
+     * @param directory The projects's directory.
+     * @return A {@link Project} instance.
      * @throws IOException              if some IO exception occurs.
-     * @throws IllegalArgumentException If the specified directory is not a name folder.
+     * @throws IllegalArgumentException If the specified directory is not a project folder.
      */
     public static Project get(File directory) throws IOException {
         if (!Projects.isProjectFolder(directory)) {
-            throw new IllegalArgumentException("\"" + directory + "\" is not a valid eclipse name folder");
+            throw new IllegalArgumentException("\"" + directory + "\" is not a valid project folder");
         }
         final String path = directory.getCanonicalPath();
         // you are not crazy the following two 'if' are equal
@@ -61,7 +59,7 @@ public final class Projects {
             synchronized (Projects.class) {
                 project = directoryCache.get(path);
                 if (project == null) {
-                    project = new ProjectImpl(directory);
+                    project = createProjectInstance(directory);
                     directoryCache.put(path, project);
                 }
             }
@@ -77,19 +75,19 @@ public final class Projects {
      */
     public static String getMetricsCsv(Set<Project> projects) {
         StringBuilder csv = new StringBuilder("Name,D,I,A,Na,Nc,Ce,Ca,DAG");
-
+        final Locale en_US = new Locale("en", "US"); // default locale for double parsing
         for (Project project : projects) {
             Metrics m = project.getMetrics();
             String name = project.getName();
-            String d = String.format(UNITED_STATES, "%.2f", m.getDistance());
-            String i = String.format(UNITED_STATES, "%.2f", m.getInstability());
-            String a = String.format(UNITED_STATES, "%.2f", m.getAbstractness());
+            String d = String.format(en_US, "%.2f", m.getDistance());
+            String i = String.format(en_US, "%.2f", m.getInstability());
+            String a = String.format(en_US, "%.2f", m.getAbstractness());
             int na = m.getAbstractTypes();
             int nc = m.getConcreteTypes();
             int ce = m.getOutputDependencies();
             int ca = m.getInputDependencies();
             int dag = m.isAcyclic() ? 1 : 0;
-            csv.append(String.format(UNITED_STATES, "%n%s,%s,%s,%s,%d,%d,%d,%d,%d", name, d, i, a, na, nc, ce, ca, dag));
+            csv.append(String.format(en_US, "%n%s,%s,%s,%s,%d,%d,%d,%d,%d", name, d, i, a, na, nc, ce, ca, dag));
         }
         return csv.toString();
     }
@@ -102,7 +100,7 @@ public final class Projects {
      * @throws IOException If some IO error occurs.
      */
     public static Set<Project> scan(File directory) throws IOException {
-        return scan(directory, DUMMY_LISTENER);
+        return scan(directory, EMPTY_LISTENER);
     }
 
     /**
@@ -115,44 +113,63 @@ public final class Projects {
      */
     public static Set<Project> scan(File directory, ProjectScanListener listener) throws IOException {
         directory = Objects.requireNonNull(directory, "Directory cannot be null!");
+        final String canonicalPath = directory.getCanonicalPath();
         if (!directory.isDirectory()) {
-            throw new IllegalArgumentException("\"" + directory.getCanonicalPath() + "\" is not a directory!");
+            throw new IllegalArgumentException("\"" + canonicalPath + "\" is not a directory!");
         }
         if (listener == null) {
-            listener = DUMMY_LISTENER;
+            listener = EMPTY_LISTENER;
         }
 
         directoryCache.clear();
-
-        System.out.print("Scanning projects in \"" + directory.getAbsolutePath() + "\"...");
+        
+        System.out.print("Scanning projects in \"" + canonicalPath + "\"...");
         listener.onProjectScanStarted(directory);
 
         Set<Project> projects = scanRecursively(directory, listener);
+
         System.out.println("    Done!");
         listener.onProjectScanFinished(directory);
         return projects;
     }
 
-    /**
-     * Returns <tt>true</tt> if the specified directory contains a <tt>.project</tt> file and a <tt>.classpath</tt> file.
-     */
+    private static Project createProjectInstance(File directory) throws IOException {
+        if (isEclipseProject(directory)) {
+            return new EclipseProject(directory);
+        }
+        if (isNetBeansProject(directory)) {
+            return new NetBeansProject(directory);
+        }
+        if (isMavenProject(directory)) {
+            return new MavenProject(directory);
+        }
+        throw new UnsupportedOperationException("Could not determine project kind for directory \"" + directory.getCanonicalPath() + "\"");
+    }
+
+    private static boolean isEclipseProject(File directory) {
+        File projectFile = new File(directory, EclipseProject.PROJECT_FILE);
+        File classpathFile = new File(directory, EclipseProject.CLASSPATH_FILE);
+        return projectFile.exists() && projectFile.isFile()
+                && classpathFile.exists() && classpathFile.isFile();
+    }
+
+    private static boolean isMavenProject(File directory) {
+        File pomFile = new File(directory, MavenProject.POM_FILE);
+        return pomFile.exists() && pomFile.isFile();
+    }
+
+    private static boolean isNetBeansProject(File directory) {
+        File nbProjectDir = new File(directory, NetBeansProject.NBPROJECT_FOLDER);
+        return nbProjectDir.exists() && nbProjectDir.isDirectory();
+    }
+
     private static boolean isProjectFolder(File directory) {
         if (!directory.isDirectory()) {
             return false;
         }
-        File[] files = directory.listFiles();
-        boolean containsProjectFile = false;
-        boolean containsClasspathFile = false;
-        for (File file : files) {
-            String name = file.getName();
-            if (name.equals(ProjectImpl.PROJECT_FILE)) {
-                containsProjectFile = true;
-            }
-            if (name.equals(ProjectImpl.CLASSPATH_FILE)) {
-                containsClasspathFile = true;
-            }
-        }
-        return containsProjectFile && containsClasspathFile;
+        return isEclipseProject(directory)
+                || isNetBeansProject(directory)
+                || isMavenProject(directory);
     }
 
     private static Set<Project> scanRecursively(File directory, ProjectScanListener listener) throws IOException {
@@ -164,11 +181,13 @@ public final class Projects {
         if (files != null) {
             for (File file : files) {
                 if (file.isDirectory()) {
-                    projects.addAll(scanRecursively(file, listener));
-                } else if (file.getName().equals(ProjectImpl.CLASSPATH_FILE)) {
-                    Project project = Projects.get(directory);
-                    projects.add(project);
-                    listener.onProjectFound(project);
+                    if (isProjectFolder(file)) {
+                        Project project = Projects.get(file);
+                        projects.add(project);
+                        listener.onProjectFound(project);
+                    } else {
+                        projects.addAll(scanRecursively(file, listener));
+                    }
                 }
             }
         }

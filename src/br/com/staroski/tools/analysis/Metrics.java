@@ -58,7 +58,7 @@ public interface Metrics {
     int getTotalTypes();
 
     /**
-     * Returns if the {@link Project} is a "DAG", <b>Direct Acyclic Graph</b>, that is, if it has no circular dependencies.
+     * Returns <tt>true</tt> if the {@link Project} is a "DAG", <b>Directed Acyclic Graph</b>, that is, if it has no circular dependencies.
      */
     boolean isAcyclic();
 

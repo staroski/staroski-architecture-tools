@@ -10,7 +10,7 @@ final class AcyclicUpdater implements MetricsVisitor {
 
     @Override
     public void visit(Metrics metrics) {
-        MetricsImpl implementation = (MetricsImpl) metrics;
+        DefaultMetrics implementation = (DefaultMetrics) metrics;
         implementation.setAcyclic(acyclic);
     }
 
