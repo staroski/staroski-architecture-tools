@@ -1,6 +1,7 @@
 package br.com.staroski.tools.analysis.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.WindowAdapter;
@@ -207,22 +208,7 @@ public final class MetricsCollectorUI extends JDialog implements I18N {
         metricsCsv = null;
         textAreaDetails.setText("");
 
-        Runnable process = new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    final MetricsAnalyzer metricsAnalyzer = new MetricsAnalyzer();
-                    metricsAnalyzer.addMetricsAnalyzerListener(new InnerListener());
-                    metricsAnalyzer.analyze(directory);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    String title = UI.getText("MetricsCollectorUI.collect.error.title");
-                    UI.showError(MetricsCollectorUI.this, title, e);
-                }
-            }
-        };
-
+        Runnable process = () -> runMetricsAnalyzer(directory);
         new Thread(process, "MetricsAnalyzerThread").start();
     }
 
@@ -299,5 +285,30 @@ public final class MetricsCollectorUI extends JDialog implements I18N {
 
     private void println(String message) {
         SwingUtilities.invokeLater(() -> textAreaDetails.append(message + "\n"));
+    }
+
+    private void runMetricsAnalyzer(File directory) {
+        try {
+            updateState(true);
+            final MetricsAnalyzer metricsAnalyzer = new MetricsAnalyzer();
+            metricsAnalyzer.addMetricsAnalyzerListener(new InnerListener());
+            metricsAnalyzer.analyze(directory);
+        } catch (Exception e) {
+            e.printStackTrace();
+            String title = UI.getText("MetricsCollectorUI.collect.error.title");
+            UI.showError(MetricsCollectorUI.this, title, e);
+        } finally {
+            updateState(false);
+        }
+    }
+
+    private void updateState(boolean running) {
+        int type = running ? Cursor.WAIT_CURSOR : Cursor.DEFAULT_CURSOR;
+        UI.setCursor(this, Cursor.getPredefinedCursor(type));
+        final boolean enabled = !running;
+        textFieldDirectory.setEditable(enabled);
+        buttonDirectory.setEnabled(enabled);
+        buttonCollect.setEnabled(enabled);
+        buttonLoadCsv.setEnabled(enabled);
     }
 }

@@ -7,8 +7,8 @@ import br.com.staroski.tools.analysis.MetricsVisitors;
 import br.com.staroski.tools.analysis.Project;
 
 /**
- * This class iterates over a {@link Set} of {@link Project} and computes its <b>efferent coupling</b> ("Ce" - output dependencies) and <b>afferent
- * coupling</b> ("Ca" - input dependencies).<br>
+ * This class iterates over a {@link Set} of {@link Project} and computes its <b>efferent coupling</b> ("Ce" - output dependencies) and <b>afferent coupling</b>
+ * ("Ca" - input dependencies).<br>
  * For short:<br>
  * "Ce" means "how many components I depend on".<br>
  * "Ca" means "how many components depend on me".

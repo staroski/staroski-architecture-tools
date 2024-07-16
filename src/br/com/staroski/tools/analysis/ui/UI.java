@@ -2,6 +2,7 @@ package br.com.staroski.tools.analysis.ui;
 
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.Cursor;
 import java.awt.Frame;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
@@ -33,9 +34,9 @@ import javax.swing.filechooser.FileFilter;
  */
 public final class UI {
 
-    public static final Locale UNITED_STATES = new Locale("en", "US");
-    public static final Locale GERMANY = new Locale("de", "DE");
-    public static final Locale BRAZIL = new Locale("pt", "BR");
+    public static final Locale UNITED_STATES = new Locale.Builder().setLanguage("en").setRegion("US").build();
+    public static final Locale GERMANY = new Locale.Builder().setLanguage("de").setRegion("DE").build();
+    public static final Locale BRAZIL = new Locale.Builder().setLanguage("pt").setRegion("BR").build();
 
     private static JFileChooser fileChooser;
 
@@ -60,7 +61,7 @@ public final class UI {
             window.setLocationRelativeTo(null);
         }
     }
-    
+
     public static synchronized Set<Locale> getLocales() {
         return new TreeSet<>(Arrays.asList(UNITED_STATES, GERMANY, BRAZIL));
     }
@@ -134,6 +135,12 @@ public final class UI {
         return null;
     }
 
+    public static Cursor setCursor(final Component parent, final Cursor newCursor) {
+        Cursor oldCursor = parent.getCursor();
+        parent.setCursor(newCursor);
+        return oldCursor;        
+    }
+
     public static void setLocale(Locale locale) {
         try {
             String language = locale.getLanguage() + "_" + locale.getCountry();
@@ -162,22 +169,22 @@ public final class UI {
         return option == JOptionPane.YES_OPTION;
     }
 
-    public static synchronized void showError(final Component owner, final String title, final Throwable error) {
+    public static synchronized void showError(final Component parent, final String title, final Throwable error) {
         Object message = error.getClass().getSimpleName() + "\n" + error.getLocalizedMessage();
         int messageType = JOptionPane.ERROR_MESSAGE;
-        JOptionPane.showMessageDialog(owner, message, title, messageType);
+        JOptionPane.showMessageDialog(parent, message, title, messageType);
     }
 
-    public static synchronized void showInformation(final Component owner, final String title, final String message) {
+    public static synchronized void showInformation(final Component parent, final String title, final String message) {
         int messageType = JOptionPane.INFORMATION_MESSAGE;
-        JOptionPane.showMessageDialog(owner, message, title, messageType);
+        JOptionPane.showMessageDialog(parent, message, title, messageType);
     }
 
-    public static synchronized void showWarning(final Component owner, final String title, final String message) {
+    public static synchronized void showWarning(final Component parent, final String title, final String message) {
         int messageType = JOptionPane.WARNING_MESSAGE;
-        JOptionPane.showMessageDialog(owner, message, title, messageType);
+        JOptionPane.showMessageDialog(parent, message, title, messageType);
     }
-
+    
     private static void applyI18N(Component component, Locale locale) {
         if (component instanceof I18N i18n) {
             i18n.onLocaleChange(locale);

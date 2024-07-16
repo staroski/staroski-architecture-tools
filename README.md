@@ -48,9 +48,9 @@ To use the Component Dispersion Chart tool:
 
 **Attention** you need a [JRE - Java Runtime Environment](https://adoptium.net/temurin/releases/?package=jre&version=20) installed in order to execute the tool.
 
-Download the [JAR](staroski-architecture-tools.jar) file to your computer and simple double-click it.
+Download the [JAR](dist/staroski-architecture-tools.jar) file to your computer and simple double-click it.
 
-If it not works then you can navigate to the directory where the [JAR](staroski-architecture-tools.jar) file is located and execute it in command line with:
+If it not works then you can navigate to the directory where the [JAR](dist/staroski-architecture-tools.jar) file is located and execute it in command line with:
 
 ```bash
 java -jar staroski-architecture-tools.jar

@@ -1,0 +1,74 @@
+<project name="staroski-architecture-tools" default="jar" basedir=".">
+
+	<!-- Definindo propriedades -->
+	<property name="src.dir" location="src" />
+	<property name="resources.dir" location="resources" />
+	<property name="lib.dir" location="lib" />
+	<property name="build.dir" location="build" />
+	<property name="dist.dir" location="dist" />
+	<property name="main-class" value="br.com.staroski.tools.Execute" />
+	<property name="javac.source" value="20" />
+	<property name="javac.target" value="20" />
+
+	<!-- Definindo o modulepath -->
+	<path id="module.path">
+		<!-- Adicione todos os JARs de módulos necessários aqui -->
+		<pathelement location="${lib.dir}/javaparser-core-3.25.9.jar"/>
+		<pathelement location="${lib.dir}/javaparser-symbol-solver-core-3.25.9.jar"/>
+		<pathelement location="${lib.dir}/jcommon-1.0.23.jar"/>
+		<pathelement location="${lib.dir}/jfreechart-1.0.19.jar"/>
+	</path>
+
+	<!-- Criando os diretórios necessários -->
+	<target name="init">
+		<mkdir dir="${build.dir}" />
+		<mkdir dir="${dist.dir}" />
+	</target>
+
+	<!-- Compilando os arquivos Java -->
+	<target name="compile" depends="init">
+		<javac srcdir="${src.dir}"
+			   destdir="${build.dir}"
+			   source="${javac.source}"
+			   target="${javac.target}"
+		       includeantruntime="false"
+			   modulepathref="module.path">
+		</javac>
+	</target>
+
+	<!-- Copiando os recursos -->
+	<target name="copy-resources" depends="compile">
+		<copy todir="${build.dir}/images">
+			<fileset dir="${resources.dir}/images" includes="**/*" />
+		</copy>
+		<copy todir="${build.dir}/properties">
+			<fileset dir="${resources.dir}/properties" includes="**/*" />
+		</copy>
+	</target>
+
+	<!-- Copiando as dependências (JARs) para o diretório de build -->
+	<target name="copy-libs" depends="copy-resources">
+		<copy todir="${build.dir}/lib">
+			<fileset dir="${lib.dir}" includes="**/*.jar" />
+		</copy>
+	</target>
+
+	<!-- Criando o JAR executável -->
+	<target name="jar" depends="copy-libs">
+		<jar destfile="${dist.dir}/staroski-architecture-tools.jar" basedir="${build.dir}">
+			<manifest>
+				<attribute name="Main-Class" value="${main-class}" />
+			</manifest>
+			<!-- Incluindo bibliotecas no JAR -->
+			<zipgroupfileset dir="${lib.dir}" includes="**/*.jar" />
+		</jar>
+		
+        <!-- Após criar o JAR, executa o target clean -->
+        <antcall target="clean"/>
+	</target>
+
+	<!-- Limpando o diretório de build -->
+	<target name="clean">
+		<delete dir="${build.dir}" />
+	</target>
+</project>

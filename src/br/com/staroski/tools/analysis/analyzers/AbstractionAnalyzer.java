@@ -32,9 +32,9 @@ public final class AbstractionAnalyzer {
 
     public AbstractionAnalyzer() {
         final Charset cp1252 = Charset.forName("Cp1252");
-		final ParserConfiguration config = new ParserConfiguration()
-        		.setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_17)
-        		.setCharacterEncoding(cp1252);
+        final ParserConfiguration config = new ParserConfiguration()
+                .setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_17)
+                .setCharacterEncoding(cp1252);
         javaParser = new JavaParser(config);
     }
 
@@ -88,13 +88,13 @@ public final class AbstractionAnalyzer {
             listener.onFileParsingStarted(new AbstractionAnalysisEvent(project, file));
 
             final Charset charset = javaParser.getParserConfiguration().getCharacterEncoding();
-			final String sourceCode = new String(Files.readAllBytes(sourcePath), charset);
+            final String sourceCode = new String(Files.readAllBytes(sourcePath), charset);
             final ParseResult<CompilationUnit> parsing = javaParser.parse(sourceCode);
-            
+
             listener.onFileParsingFinished(new AbstractionAnalysisEvent(project, file));
-            
+
             if (parsing.isSuccessful()) {
-            	final CompilationUnit compilationUnit = parsing.getResult().get();
+                final CompilationUnit compilationUnit = parsing.getResult().get();
 
                 final Metrics metrics = project.getMetrics();
                 compilationUnit.findAll(ClassOrInterfaceDeclaration.class).forEach(classOrInterface -> {
@@ -103,12 +103,12 @@ public final class AbstractionAnalyzer {
                             ? MetricsVisitors.incrementAbstractTypes()//
                             : MetricsVisitors.incrementConcreteTypes();
                     metrics.accept(visitor);
-                });            	
+                });
             } else {
-            	System.err.println("Problems on \"" + file.getAbsolutePath() + "\":");
-            	for (Problem problem : parsing.getProblems()) {
-            		System.err.println("    " + problem.getMessage());
-            	}
+                System.err.println("Problems on \"" + file.getAbsolutePath() + "\":");
+                for (Problem problem : parsing.getProblems()) {
+                    System.err.println("    " + problem.getMessage());
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();

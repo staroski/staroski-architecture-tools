@@ -75,7 +75,7 @@ public final class Projects {
      */
     public static String getMetricsCsv(Set<Project> projects) {
         StringBuilder csv = new StringBuilder("Name,D,I,A,Na,Nc,Ce,Ca,DAG");
-        final Locale en_US = new Locale("en", "US"); // default locale for double parsing
+        final Locale en_US = new Locale.Builder().setLanguage("en").setRegion("US").build(); // default locale for double parsing
         for (Project project : projects) {
             Metrics m = project.getMetrics();
             String name = project.getName();
@@ -122,7 +122,7 @@ public final class Projects {
         }
 
         directoryCache.clear();
-        
+
         System.out.print("Scanning projects in \"" + canonicalPath + "\"...");
         listener.onProjectScanStarted(directory);
 
