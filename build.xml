@@ -7,8 +7,8 @@
 	<property name="build.dir" location="build" />
 	<property name="dist.dir" location="dist" />
 	<property name="main-class" value="br.com.staroski.tools.Execute" />
-	<property name="javac.source" value="20" />
-	<property name="javac.target" value="20" />
+	<property name="javac.source" value="17" />
+	<property name="javac.target" value="17" />
 
 	<!-- Definindo o modulepath -->
 	<path id="module.path">

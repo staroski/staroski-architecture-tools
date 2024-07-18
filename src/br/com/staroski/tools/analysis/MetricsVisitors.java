@@ -42,5 +42,6 @@ public final class MetricsVisitors {
         return new AcyclicUpdater(acyclic);
     }
 
+    // non instantiable utility class
     private MetricsVisitors() {}
 }

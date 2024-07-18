@@ -10,7 +10,7 @@ import br.com.staroski.tools.analysis.Metrics;
 import br.com.staroski.tools.analysis.Project;
 import br.com.staroski.tools.analysis.Projects;
 import br.com.staroski.tools.analysis.analyzers.CouplingAnalyzer;
-import br.com.staroski.tools.analysis.analyzers.CycleChecker;
+import br.com.staroski.tools.analysis.analyzers.DeepCycleChecker;
 import br.com.staroski.utils.Arguments;
 
 /**
@@ -55,7 +55,7 @@ public final class GraphvizDotFileGenerator {
         }
     }
 
-    private final CycleChecker cycleChecker = new CycleChecker();
+    private final DeepCycleChecker cycleChecker = new DeepCycleChecker();
 
     private GraphvizDotFileGenerator() {}
 
@@ -166,11 +166,11 @@ public final class GraphvizDotFileGenerator {
         Metrics stats = project.getMetrics();
         final int ac = stats.getInputDependencies();
         final int ec = stats.getOutputDependencies();
-        if (ac < 1) {
+        if (ac == 0) {
             System.out.println("    ignoring " + what + " with afferent coupling " + ac + " \"" + name + "\"");
             return true;
         }
-        if (ec < 2) {
+        if (ec == 0) {
             System.out.println("    ignoring " + what + " with efferent coupling " + ec + " \"" + name + "\"");
             return true;
         }

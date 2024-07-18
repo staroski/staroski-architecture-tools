@@ -1,10 +1,12 @@
 package br.com.staroski.tools.analysis.analyzers;
 
+import java.util.List;
 import java.util.Set;
 
 import br.com.staroski.tools.analysis.Metrics;
 import br.com.staroski.tools.analysis.MetricsVisitors;
 import br.com.staroski.tools.analysis.Project;
+import br.com.staroski.tools.analysis.analyzers.ShallowCycleAnalyzer.Cycle;
 
 /**
  * This class iterates over a {@link Set} of {@link Project} and computes some dependency metrics on it like: number of <b>abstract types</b> ("Na"), number of
@@ -14,8 +16,6 @@ import br.com.staroski.tools.analysis.Project;
  * @author Staroski, Ricardo Artur
  */
 public final class DependencyAnalyzer {
-
-    private final CycleChecker cycleChecker = new CycleChecker();
 
     private DependencyAnalyzerListener listener = new DefaultDependencyAnalyzerListener();
 
@@ -38,20 +38,28 @@ public final class DependencyAnalyzer {
         }
     }
 
-    private boolean isAcyclic(Project project, Set<Project> projects) {
+    private int getCycles(Project project) {
         Metrics metrics = project.getMetrics();
-        if ((metrics.getInputDependencies() < 1) || (metrics.getOutputDependencies() < 2)) {
-            return true; // ignoring because there is no more than one depending on me
+        if ((metrics.getOutputDependencies() == 0)) {
+            return 0; // ignoring because I depend no one
         }
-        return cycleChecker.isAcyclic(project);
+        if ((metrics.getInputDependencies() == 0)) {
+            return 0; // ignoring because no one depends on me
+        }
+
+        ShallowCycleAnalyzer cycleAnalyzer = new ShallowCycleAnalyzer();
+        List<Cycle> cycles = cycleAnalyzer.analyze(project);
+        return cycles.size();
     }
 
     private void updateAcyclicStats(Set<Project> projects, Project project) {
         listener.onCycleAnalysisStarted(new DependencyAnalysisEvent(project));
 
-        project.getMetrics().accept(MetricsVisitors.setAcyclic(isAcyclic(project, projects)));
+        int cycles = getCycles(project);
 
-        listener.onCycleAnalysisFinished(new DependencyAnalysisEvent(project));
+        project.getMetrics().accept(MetricsVisitors.setAcyclic(cycles == 0));
+
+        listener.onCycleAnalysisFinished(new DependencyAnalysisEvent(project, cycles));
     }
 
     private void updateCouplingStats(Project project, Set<Project> allProjects) {
