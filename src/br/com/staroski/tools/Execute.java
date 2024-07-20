@@ -7,7 +7,7 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
 import br.com.staroski.tools.analysis.ui.AnalysisToolsUI;
-import br.com.staroski.tools.analysis.ui.UI;
+import br.com.staroski.ui.UI;
 
 /**
  * This class executes the user interface for the Staroski's Architecture Tools.
@@ -18,10 +18,7 @@ public final class Execute {
 
     public static void main(String... args) {
         try {
-            // apply look and feel
             applyLookAndFeel();
-
-            // show gui
             SwingUtilities.invokeLater(() -> new AnalysisToolsUI().setVisible(true));
         } catch (Throwable t) {
             t.printStackTrace();

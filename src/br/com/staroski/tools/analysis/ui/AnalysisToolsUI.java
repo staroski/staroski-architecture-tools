@@ -23,6 +23,9 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 
+import br.com.staroski.ui.I18N;
+import br.com.staroski.ui.UI;
+
 /**
  * This is the main window for the Staroski's Architecture Tools.
  *
@@ -113,6 +116,9 @@ public final class AnalysisToolsUI extends JFrame implements I18N {
     private JMenu createMenuFile() {
         menuFile = new JMenu(UI.getText("AnalysisToolsUI.menu.file"));
 
+        menuItemMetricsAnalyzer = new JMenuItem(UI.getText("AnalysisToolsUI.menu.file.metricsAnalyzer"), new ImageIcon(Images.METRICS_ANALYZER_24));
+        menuItemMetricsAnalyzer.addActionListener(event -> openMetricsAnalyzer());
+
         menuItemImportCSV = new JMenuItem(UI.getText("AnalysisToolsUI.menu.file.importCSV"), new ImageIcon(Images.IMPORT_CSV_24));
         menuItemImportCSV.addActionListener(event -> importCsv());
 
@@ -122,13 +128,10 @@ public final class AnalysisToolsUI extends JFrame implements I18N {
         menuItemExit = new JMenuItem(UI.getText("AnalysisToolsUI.menu.file.exit"), new ImageIcon(Images.EXIT_24));
         menuItemExit.addActionListener(event -> askForExit());
 
-        menuItemMetricsAnalyzer = new JMenuItem(UI.getText("AnalysisToolsUI.menu.file.metricsAnalyzer"), new ImageIcon(Images.METRICS_ANALYZER_24));
-        menuItemMetricsAnalyzer.addActionListener(event -> openMetricsAnalyzer());
-
+        menuFile.add(menuItemMetricsAnalyzer);
+        menuFile.addSeparator();
         menuFile.add(menuItemImportCSV);
         menuFile.add(menuItemExportCSV);
-        menuFile.addSeparator();
-        menuFile.add(menuItemMetricsAnalyzer);
         menuFile.addSeparator();
         menuFile.add(menuItemExit);
         return menuFile;

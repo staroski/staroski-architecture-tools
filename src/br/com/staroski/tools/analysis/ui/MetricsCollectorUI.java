@@ -22,13 +22,11 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
-import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
 import br.com.staroski.tools.analysis.Project;
@@ -37,6 +35,9 @@ import br.com.staroski.tools.analysis.analyzers.AbstractionAnalysisEvent;
 import br.com.staroski.tools.analysis.analyzers.DefaultMetricsAnalyzerListener;
 import br.com.staroski.tools.analysis.analyzers.DependencyAnalysisEvent;
 import br.com.staroski.tools.analysis.analyzers.MetricsAnalyzer;
+import br.com.staroski.ui.ConsoleTextPane;
+import br.com.staroski.ui.I18N;
+import br.com.staroski.ui.UI;
 
 /**
  * This is a dialog for the metrics analyzer tool, part of the Staroski's Architecture Tools.
@@ -44,58 +45,58 @@ import br.com.staroski.tools.analysis.analyzers.MetricsAnalyzer;
  * @author Staroski, Ricardo Artur
  */
 @SuppressWarnings({ "serial", "unused" })
-public final class MetricsCollectorUI extends JDialog implements I18N {
+final class MetricsCollectorUI extends JDialog implements I18N {
 
     private class InnerListener extends DefaultMetricsAnalyzerListener {
 
         @Override
         public void onAbstractionAnalysisStarted(AbstractionAnalysisEvent event) {
-            print(UI.getText("MetricsCollectorUI.collect.onAbstractionAnalysisStarted", event.getProject().getName()));
+            consoleTextPane.print(UI.getText("MetricsCollectorUI.collect.onAbstractionAnalysisStarted", event.getProject().getName()));
         }
 
         @Override
         public void onAbstractionAnalysisFinished(AbstractionAnalysisEvent event) {
-            print("    ");
-            println(UI.getText("MetricsCollectorUI.collect.onAbstractionAnalysisFinished"), Color.BLACK, Color.GREEN);
+            consoleTextPane.print("    ");
+            consoleTextPane.println(UI.getText("MetricsCollectorUI.collect.onAbstractionAnalysisFinished"), Color.BLACK, Color.GREEN);
         }
 
         @Override
         public void onCouplingAnalysisStarted(DependencyAnalysisEvent event) {
-            print(UI.getText("MetricsCollectorUI.collect.onCouplingAnalysisStarted", event.getProject().getName()));
+            consoleTextPane.print(UI.getText("MetricsCollectorUI.collect.onCouplingAnalysisStarted", event.getProject().getName()));
         }
 
         @Override
         public void onCouplingAnalysisFinished(DependencyAnalysisEvent event) {
-            print("    ");
-            println(UI.getText("MetricsCollectorUI.collect.onCouplingAnalysisFinished"), Color.BLACK, Color.GREEN);
+            consoleTextPane.print("    ");
+            consoleTextPane.println(UI.getText("MetricsCollectorUI.collect.onCouplingAnalysisFinished"), Color.BLACK, Color.GREEN);
         }
 
         @Override
         public void onCycleAnalysisStarted(DependencyAnalysisEvent event) {
-            print(UI.getText("MetricsCollectorUI.collect.onCycleAnalysisStarted", event.getProject().getName()));
+            consoleTextPane.print(UI.getText("MetricsCollectorUI.collect.onCycleAnalysisStarted", event.getProject().getName()));
         }
 
         @Override
         public void onCycleAnalysisFinished(DependencyAnalysisEvent event) {
-            print("    ");
+            consoleTextPane.print("    ");
             int cycles = event.getCycles();
             String message = UI.getText("MetricsCollectorUI.collect.onCycleAnalysisFinished", cycles);
             if (cycles > 0) {
-                println(message, Color.BLACK, Color.YELLOW);
+                consoleTextPane.println(message, Color.BLACK, Color.YELLOW);
             } else {
-                println(message, Color.BLACK, Color.GREEN);
+                consoleTextPane.println(message, Color.BLACK, Color.GREEN);
             }
         }
 
         @Override
         public void onMetricsAnalysisFinished(Instant end, Duration elapsed) {
             String duration = String.format("%02d:%02d:%02d", elapsed.toHours(), elapsed.toMinutesPart(), elapsed.toSecondsPart());
-            println(UI.getText("MetricsCollectorUI.collect.onMetricsAnalysisFinished", duration));
+            consoleTextPane.println(UI.getText("MetricsCollectorUI.collect.onMetricsAnalysisFinished", duration));
         }
 
         @Override
         public void onMetricsAnalysisStarted(Instant start) {
-            println(UI.getText("MetricsCollectorUI.collect.onMetricsAnalysisStarted"));
+            consoleTextPane.println(UI.getText("MetricsCollectorUI.collect.onMetricsAnalysisStarted"));
         }
 
         @Override
@@ -103,18 +104,18 @@ public final class MetricsCollectorUI extends JDialog implements I18N {
             if (!projects.isEmpty()) {
                 metricsCsv = Projects.getMetricsCsv(projects);
             }
-            println(UI.getText("MetricsCollectorUI.collect.onMetricsCollected", projects.size(), metricsCsv));
+            consoleTextPane.println(UI.getText("MetricsCollectorUI.collect.onMetricsCollected", projects.size(), metricsCsv));
         }
 
         @Override
         public void onProjectFound(Project project) {
-            println(UI.getText("MetricsCollectorUI.collect.onProjectFound", project.getName()));
+            consoleTextPane.println(UI.getText("MetricsCollectorUI.collect.onProjectFound", project.getName()));
         }
 
         @Override
         public void onProjectScanStarted(File directory) {
             try {
-                println(UI.getText("MetricsCollectorUI.collect.onProjectScanStarted", directory.getCanonicalPath()));
+                consoleTextPane.println(UI.getText("MetricsCollectorUI.collect.onProjectScanStarted", directory.getCanonicalPath()));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -125,7 +126,7 @@ public final class MetricsCollectorUI extends JDialog implements I18N {
     private JButton buttonDirectory;
     private JLabel labelDirectory;
     private JButton buttonCollect;
-    private JEditorPane editorPaneDetails;
+    private ConsoleTextPane consoleTextPane;
     private String metricsCsv;
     private JButton buttonLoadCsv;
     private Consumer<String> csvConsumer;
@@ -134,7 +135,7 @@ public final class MetricsCollectorUI extends JDialog implements I18N {
         super(owner, UI.getText("MetricsCollectorUI.title"), true);
         setIconImages(createIcons());
         setMinimumSize(new Dimension(640, 480));
-        setSize(new Dimension(640, 480));
+        setSize(new Dimension(1024, 640));
         setLocationRelativeTo(owner);
 
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
@@ -173,7 +174,7 @@ public final class MetricsCollectorUI extends JDialog implements I18N {
     public void setVisible(boolean visible) {
         if (visible) {
             metricsCsv = null;
-            editorPaneDetails.setText("");
+            consoleTextPane.clear();
             updateState(false);
         }
         super.setVisible(visible);
@@ -214,7 +215,8 @@ public final class MetricsCollectorUI extends JDialog implements I18N {
         File directory = UI.selectDirectory(this, getSelectedDirectory());
         if (directory != null) {
             try {
-                textFieldDirectory.setText(directory.getCanonicalPath());
+                final String path = directory.getCanonicalPath();
+                textFieldDirectory.setText(path);
             } catch (IOException e) {
                 e.printStackTrace();
                 String title = UI.getText("MetricsCollectorUI.selectFolder.error.title");
@@ -232,24 +234,15 @@ public final class MetricsCollectorUI extends JDialog implements I18N {
             return;
         }
         metricsCsv = null;
-        editorPaneDetails.setText("");
+        consoleTextPane.clear();
 
         Runnable process = () -> runMetricsAnalyzer(directory);
         new Thread(process, "MetricsAnalyzerThread").start();
     }
 
     private JComponent createDetailPanel() {
-        editorPaneDetails = new JEditorPane();
-        editorPaneDetails.setContentType("text/html");
-        editorPaneDetails.setText("<html><head>" +
-                "<style>" +
-                "body { font-family: monospace; margin: 0; padding: 0; }" +
-                ".content { display: inline-block; white-space: nowrap; }" +
-                "</style>" +
-                "</head><body><div class='content'><p></p></div></body></html>");
-        editorPaneDetails.setEditable(false);
-
-        JScrollPane scrollPane = new JScrollPane(editorPaneDetails);
+        consoleTextPane = new ConsoleTextPane();
+        JScrollPane scrollPane = new JScrollPane(consoleTextPane);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         return scrollPane;
@@ -318,7 +311,7 @@ public final class MetricsCollectorUI extends JDialog implements I18N {
     }
 
     private void printHtml(String html) {
-        String currentContent = editorPaneDetails.getText();
+        String currentContent = consoleTextPane.getText();
         int lastParagraphEndIndex = currentContent.lastIndexOf("</p>");
         if (lastParagraphEndIndex == -1) {
             lastParagraphEndIndex = currentContent.lastIndexOf("</body>");
@@ -326,40 +319,7 @@ public final class MetricsCollectorUI extends JDialog implements I18N {
         String before = currentContent.substring(0, lastParagraphEndIndex);
         String after = currentContent.substring(lastParagraphEndIndex);
         String newContent = before + html + after;
-        editorPaneDetails.setText(newContent);
-    }
-
-    private void println(String message) {
-        print(message + "\n");
-    }
-
-    private void print(String text) {
-        SwingUtilities.invokeLater(() -> printHtml(text.replaceAll("\n", "<br/>")));
-    }
-
-    private void println(String text, Color fg) {
-        print(text + "\n", fg);
-    }
-
-    private void print(String text, Color fg) {
-        SwingUtilities.invokeLater(() -> {
-            String fgHex = String.format("#%02x%02x%02x", fg.getRed(), fg.getGreen(), fg.getBlue());
-            String html = String.format("<span style=\"color:%s;\">%s</span>", fgHex, text.replaceAll("\n", "<br/>"));
-            printHtml(html);
-        });
-    }
-
-    private void println(String message, Color textColor, Color backgroundColor) {
-        print(message + "\n", textColor, backgroundColor);
-    }
-
-    private void print(String text, Color fg, Color bg) {
-        SwingUtilities.invokeLater(() -> {
-            String fgHex = String.format("#%02x%02x%02x", fg.getRed(), fg.getGreen(), fg.getBlue());
-            String bgHex = String.format("#%02x%02x%02x", bg.getRed(), bg.getGreen(), bg.getBlue());
-            String html = String.format("<span style=\"color:%s; background-color:%s;\">%s</span>", fgHex, bgHex, text.replaceAll("\n", "<br/>"));
-            printHtml(html);
-        });
+        consoleTextPane.setText(newContent);
     }
 
     private void runMetricsAnalyzer(File directory) {

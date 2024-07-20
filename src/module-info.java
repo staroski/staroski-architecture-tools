@@ -1,4 +1,4 @@
-module staroski.tools.analysis {
+module staroski.architecture.tools {
 
     requires java.desktop;
 
@@ -6,5 +6,4 @@ module staroski.tools.analysis {
 
     requires jfreechart;
     requires jcommon;
-
 }
