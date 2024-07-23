@@ -10,6 +10,7 @@ import java.awt.GraphicsEnvironment;
 import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.awt.Window;
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +37,10 @@ import javax.swing.filechooser.FileFilter;
  */
 public final class UI {
 
+    static {
+        setLocale(Locale.getDefault(), false);
+    }
+
     public static final Font MONOSPACED = new Font("Monospaced", Font.PLAIN, 12);
 
     public static final Locale UNITED_STATES = new Locale.Builder().setLanguage("en").setRegion("US").build();
@@ -43,6 +48,13 @@ public final class UI {
     public static final Locale BRAZIL = new Locale.Builder().setLanguage("pt").setRegion("BR").build();
 
     private static JFileChooser fileChooser;
+
+    /**
+     * Emits an audio beep.
+     */
+    public static void beep() {
+        Toolkit.getDefaultToolkit().beep();
+    }
 
     public static void centralizeOnActiveScreen(final Window window) {
         centralizeOnScreen(window, getActiveScreen());
@@ -78,6 +90,13 @@ public final class UI {
 
     public static GraphicsDevice getDefaultScreen() {
         return GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+    }
+
+    /**
+     * @return The current {@link Locale} being used by the user interface.
+     */
+    public static Locale getLocale() {
+        return Locale.getDefault();
     }
 
     public static Set<Locale> getLocales() {
@@ -159,30 +178,20 @@ public final class UI {
         return oldCursor;
     }
 
-    public static void setLocale(Locale locale) {
-        try {
-            String language = locale.getLanguage() + "_" + locale.getCountry();
-            InputStream input = UI.class.getResourceAsStream("/properties/language_" + language + ".properties");
-            Properties properties = new Properties();
-            properties.load(input);
-
-            Set<Entry<Object, Object>> entries = properties.entrySet();
-            for (Entry<Object, Object> entry : entries) {
-                UIManager.put(entry.getKey(), entry.getValue());
-            }
-
-            Locale.setDefault(locale);
-            for (Window window : Frame.getWindows()) {
-                applyI18N(window, locale);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    /**
+     * Sets the new {@link Locale} of the user interface notifying any {@link Window} and {@link Component}s that implement {@link I18N} interface.
+     * 
+     * @param locale The new {@link Locale} to set.
+     * @return The previous {@link Locale}.
+     */
+    public static Locale setLocale(Locale locale) {
+        return setLocale(locale, true);
     }
 
     public static synchronized boolean showConfirmation(final Component parent, final String title, final String message) {
         int optionType = JOptionPane.YES_NO_OPTION;
         int messageType = JOptionPane.QUESTION_MESSAGE;
+        beep();
         int option = JOptionPane.showConfirmDialog(parent, message, title, optionType, messageType);
         return option == JOptionPane.YES_OPTION;
     }
@@ -190,16 +199,19 @@ public final class UI {
     public static synchronized void showError(final Component parent, final String title, final Throwable error) {
         Object message = error.getClass().getSimpleName() + "\n" + error.getLocalizedMessage();
         int messageType = JOptionPane.ERROR_MESSAGE;
+        beep();
         JOptionPane.showMessageDialog(parent, message, title, messageType);
     }
 
     public static synchronized void showInformation(final Component parent, final String title, final String message) {
         int messageType = JOptionPane.INFORMATION_MESSAGE;
+        beep();
         JOptionPane.showMessageDialog(parent, message, title, messageType);
     }
 
     public static synchronized void showWarning(final Component parent, final String title, final String message) {
         int messageType = JOptionPane.WARNING_MESSAGE;
+        beep();
         JOptionPane.showMessageDialog(parent, message, title, messageType);
     }
 
@@ -224,5 +236,40 @@ public final class UI {
         return fileChooser;
     }
 
+    /**
+     * Sets the new {@link Locale} of the user interface.
+     * 
+     * @param locale     The new {@link Locale} to set.
+     * @param notifyI18N Flag to notify or not the {@link Window}s implementing {@link I18N}.
+     * @return The previous {@link Locale}.
+     */
+    private static Locale setLocale(Locale locale, boolean notifyI18N) {
+        final Locale oldLocale = getLocale();
+        try {
+            Locale.setDefault(locale);
+
+            String language = locale.getLanguage() + "_" + locale.getCountry();
+            InputStream input = UI.class.getResourceAsStream("/properties/language_" + language + ".properties");
+            Properties properties = new Properties();
+            properties.load(input);
+
+            Set<Entry<Object, Object>> entries = properties.entrySet();
+            for (Entry<Object, Object> entry : entries) {
+                UIManager.put(entry.getKey(), entry.getValue());
+            }
+
+            if (notifyI18N) {
+                for (Window window : Frame.getWindows()) {
+                    applyI18N(window, locale);
+                }
+                System.out.println("Locale changed from " + oldLocale + " to " + locale);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return oldLocale;
+    }
+
+    // non instantiable utility class
     private UI() {}
 }

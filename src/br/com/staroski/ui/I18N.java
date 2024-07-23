@@ -9,5 +9,10 @@ import java.util.Locale;
  */
 public interface I18N {
 
+    /**
+     * Called when the user interface's {@link Locale} is changed.
+     * 
+     * @param newLocale The new {@link Locale} to apply to the user interface.
+     */
     public void onLocaleChange(Locale newLocale);
 }

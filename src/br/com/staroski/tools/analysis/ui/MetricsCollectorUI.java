@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
@@ -102,6 +103,7 @@ final class MetricsCollectorUI extends JDialog implements I18N {
                 metricsCsv = Projects.getMetricsCsv(projects);
             }
             consoleTextPane.println(UI.getText("MetricsCollectorUI.collect.onMetricsCollected", projects.size(), metricsCsv));
+            UI.beep();
         }
 
         @Override

@@ -74,7 +74,7 @@ public final class Projects {
      * @return A CSV text containing the metrics of the projects.
      */
     public static String getMetricsCsv(Set<Project> projects) {
-        StringBuilder csv = new StringBuilder("Name,D,I,A,Na,Nc,Ce,Ca,DAG");
+        StringBuilder csv = new StringBuilder("Name,D,I,A,Na,Nc,Ce,Ca,Cycles");
         final Locale en_US = new Locale.Builder().setLanguage("en").setRegion("US").build(); // default locale for double parsing
         for (Project project : projects) {
             Metrics m = project.getMetrics();
@@ -86,8 +86,8 @@ public final class Projects {
             int nc = m.getConcreteTypes();
             int ce = m.getOutputDependencies();
             int ca = m.getInputDependencies();
-            int dag = m.isAcyclic() ? 1 : 0;
-            csv.append(String.format(en_US, "%n%s,%s,%s,%s,%d,%d,%d,%d,%d", name, d, i, a, na, nc, ce, ca, dag));
+            int cycles = m.getCycles().size();
+            csv.append(String.format(en_US, "%n%s,%s,%s,%s,%d,%d,%d,%d,%d", name, d, i, a, na, nc, ce, ca, cycles));
         }
         return csv.toString();
     }

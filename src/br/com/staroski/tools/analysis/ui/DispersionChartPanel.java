@@ -98,11 +98,6 @@ final class DispersionChartPanel extends JPanel implements I18N {
 
     private static class ComponentTableModel extends AbstractTableModel {
 
-        private String[] columns = UI.getText("DispersionChartPanel.components.table.columns").split(",");
-
-        private Class<?>[] columnTypes = { Integer.class, String.class, Double.class,
-                Double.class, Double.class, Integer.class, Integer.class, Integer.class, Integer.class, Boolean.class };
-
         private final List<PlotData> datalist = new ArrayList<>();
 
         private JTable table;
@@ -115,17 +110,17 @@ final class DispersionChartPanel extends JPanel implements I18N {
 
         @Override
         public Class<?> getColumnClass(int col) {
-            return columnTypes[col];
+            return COLUMN_TYPES[col];
         }
 
         @Override
         public int getColumnCount() {
-            return columns.length;
+            return COLUMN_NAMES.length;
         }
 
         @Override
         public String getColumnName(int col) {
-            return columns[col];
+            return COLUMN_NAMES[col];
         }
 
         public PlotData getObjectAt(int row) {
@@ -161,7 +156,7 @@ final class DispersionChartPanel extends JPanel implements I18N {
                     case 8:
                         return data.inputs;
                     case 9:
-                        return data.acyclic;
+                        return data.cycles;
                 }
             }
             return null;
@@ -217,11 +212,11 @@ final class DispersionChartPanel extends JPanel implements I18N {
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
                 int row, int column) {
-            Component component = defaultHeaderRenderer.getTableCellRendererComponent(table, value, isSelected,
-                    hasFocus, row, column);
+            Component component = defaultHeaderRenderer.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
             if (component instanceof JLabel) {
                 JLabel label = (JLabel) component;
                 label.setHorizontalAlignment(alignment);
+                label.setToolTipText(UI.getText("DispersionChartPanel.components.table.column" + column + ".hint"));
             }
             return component;
         }
@@ -253,9 +248,9 @@ final class DispersionChartPanel extends JPanel implements I18N {
         final Integer inputs;
         final Integer concretes;
         final Integer abstracts;
-        final Boolean acyclic;
+        final Integer cycles;
 
-        private PlotData(String name, double d, double i, double a, int na, int nc, int ce, int ca, boolean dag) {
+        private PlotData(String name, double d, double i, double a, int na, int nc, int ce, int ca, int cycles) {
             this.name = name;
             this.distance = d;
             this.instability = i;
@@ -264,7 +259,7 @@ final class DispersionChartPanel extends JPanel implements I18N {
             this.concretes = nc;
             this.outputs = ce;
             this.inputs = ca;
-            this.acyclic = dag;
+            this.cycles = cycles;
         }
 
         @Override
@@ -367,6 +362,25 @@ final class DispersionChartPanel extends JPanel implements I18N {
 
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.00");
 
+    private static final Class<?>[] COLUMN_TYPES = { Integer.class, String.class, Double.class, Double.class, Double.class,
+            Integer.class, Integer.class, Integer.class, Integer.class, Integer.class };
+
+    private static final String[] COLUMN_NAMES;
+
+    static {
+        COLUMN_NAMES = new String[10];
+        COLUMN_NAMES[0] = UI.getText("DispersionChartPanel.components.table.column0.title");
+        COLUMN_NAMES[1] = UI.getText("DispersionChartPanel.components.table.column1.title");
+        COLUMN_NAMES[2] = UI.getText("DispersionChartPanel.components.table.column2.title");
+        COLUMN_NAMES[3] = UI.getText("DispersionChartPanel.components.table.column3.title");
+        COLUMN_NAMES[4] = UI.getText("DispersionChartPanel.components.table.column4.title");
+        COLUMN_NAMES[5] = UI.getText("DispersionChartPanel.components.table.column5.title");
+        COLUMN_NAMES[6] = UI.getText("DispersionChartPanel.components.table.column6.title");
+        COLUMN_NAMES[7] = UI.getText("DispersionChartPanel.components.table.column7.title");
+        COLUMN_NAMES[8] = UI.getText("DispersionChartPanel.components.table.column8.title");
+        COLUMN_NAMES[9] = UI.getText("DispersionChartPanel.components.table.column9.title");
+    }
+
     private JFreeChart chart;
     private XYPlot plot;
     private List<PlotData> allData;
@@ -418,9 +432,6 @@ final class DispersionChartPanel extends JPanel implements I18N {
             csvBuilder.append("\n");
             for (int col = firstColumn; col < columnCount; col++) {
                 Object value = model.getValueAt(row, col);
-                if (col == lastColumn) {
-                    value = ((Boolean) value) ? 1 : 0;
-                }
                 csvBuilder.append(value);
                 if (col < lastColumn) {
                     csvBuilder.append(",");
@@ -507,20 +518,30 @@ final class DispersionChartPanel extends JPanel implements I18N {
         if (tableComponents == null) {
             return;
         }
-        final String[] columns = UI.getText("DispersionChartPanel.components.table.columns").split(",");
-        final ComponentTableModel model = (ComponentTableModel) tableComponents.getModel();
-        model.columns = columns;
+
+        COLUMN_NAMES[0] = UI.getText("DispersionChartPanel.components.table.column0.title");
+        COLUMN_NAMES[1] = UI.getText("DispersionChartPanel.components.table.column1.title");
+        COLUMN_NAMES[2] = UI.getText("DispersionChartPanel.components.table.column2.title");
+        COLUMN_NAMES[3] = UI.getText("DispersionChartPanel.components.table.column3.title");
+        COLUMN_NAMES[4] = UI.getText("DispersionChartPanel.components.table.column4.title");
+        COLUMN_NAMES[5] = UI.getText("DispersionChartPanel.components.table.column5.title");
+        COLUMN_NAMES[6] = UI.getText("DispersionChartPanel.components.table.column6.title");
+        COLUMN_NAMES[7] = UI.getText("DispersionChartPanel.components.table.column7.title");
+        COLUMN_NAMES[8] = UI.getText("DispersionChartPanel.components.table.column8.title");
+        COLUMN_NAMES[9] = UI.getText("DispersionChartPanel.components.table.column9.title");
+
         final TableColumnModel columnModel = tableComponents.getColumnModel();
-        columnModel.getColumn(0).setHeaderValue(columns[0]);
-        columnModel.getColumn(1).setHeaderValue(columns[1]);
-        columnModel.getColumn(2).setHeaderValue(columns[2]);
-        columnModel.getColumn(3).setHeaderValue(columns[3]);
-        columnModel.getColumn(4).setHeaderValue(columns[4]);
-        columnModel.getColumn(5).setHeaderValue(columns[5]);
-        columnModel.getColumn(6).setHeaderValue(columns[6]);
-        columnModel.getColumn(7).setHeaderValue(columns[7]);
-        columnModel.getColumn(8).setHeaderValue(columns[8]);
-        columnModel.getColumn(9).setHeaderValue(columns[9]);
+        columnModel.getColumn(0).setHeaderValue(COLUMN_NAMES[0]);
+        columnModel.getColumn(1).setHeaderValue(COLUMN_NAMES[1]);
+        columnModel.getColumn(2).setHeaderValue(COLUMN_NAMES[2]);
+        columnModel.getColumn(3).setHeaderValue(COLUMN_NAMES[3]);
+        columnModel.getColumn(4).setHeaderValue(COLUMN_NAMES[4]);
+        columnModel.getColumn(5).setHeaderValue(COLUMN_NAMES[5]);
+        columnModel.getColumn(6).setHeaderValue(COLUMN_NAMES[6]);
+        columnModel.getColumn(7).setHeaderValue(COLUMN_NAMES[7]);
+        columnModel.getColumn(8).setHeaderValue(COLUMN_NAMES[8]);
+        columnModel.getColumn(9).setHeaderValue(COLUMN_NAMES[9]);
+
     }
 
     private void copyColumnContentToClipboard() {
@@ -671,10 +692,10 @@ final class DispersionChartPanel extends JPanel implements I18N {
                 if (all) {
                     series.add(data.instability, data.abstractness);
                     visibleData.add(data);
-                } else if (acyclic && data.acyclic) {
+                } else if (acyclic && data.cycles == 0) {
                     series.add(data.instability, data.abstractness);
                     visibleData.add(data);
-                } else if (cyclic && !data.acyclic) {
+                } else if (cyclic && data.cycles != 0) {
                     series.add(data.instability, data.abstractness);
                     visibleData.add(data);
                 }
@@ -809,7 +830,7 @@ final class DispersionChartPanel extends JPanel implements I18N {
 
         TableColumnModel columnModel = table.getColumnModel();
         columnModel.getColumn(0).setPreferredWidth(33);
-        columnModel.getColumn(1).setPreferredWidth(210);
+        columnModel.getColumn(1).setPreferredWidth(200);
         columnModel.getColumn(2).setPreferredWidth(40);
         columnModel.getColumn(3).setPreferredWidth(40);
         columnModel.getColumn(4).setPreferredWidth(40);
@@ -817,7 +838,7 @@ final class DispersionChartPanel extends JPanel implements I18N {
         columnModel.getColumn(6).setPreferredWidth(40);
         columnModel.getColumn(7).setPreferredWidth(40);
         columnModel.getColumn(8).setPreferredWidth(40);
-        columnModel.getColumn(9).setPreferredWidth(40);
+        columnModel.getColumn(9).setPreferredWidth(50);
 
         columnModel.getColumn(0).setCellRenderer(column1Renderer);
         columnModel.getColumn(2).setCellRenderer(numericRenderer);
@@ -982,7 +1003,7 @@ final class DispersionChartPanel extends JPanel implements I18N {
         List<PlotData> allData = new ArrayList<>();
         NumberFormat format = NumberFormat.getInstance(UI.UNITED_STATES);
         BufferedReader br = new BufferedReader(in);
-        String line = br.readLine(); // Name,D,I,A,Na,Nc,Ce,Ca,DAG
+        String line = br.readLine(); // Name,D,I,A,Na,Nc,Ce,Ca,Cycles
         while ((line = br.readLine()) != null) { // data
             String[] values = line.split(",");
             int col = 0;
@@ -995,8 +1016,8 @@ final class DispersionChartPanel extends JPanel implements I18N {
             int nc = format.parse(values[col++].trim()).intValue();
             int ce = format.parse(values[col++].trim()).intValue();
             int ca = format.parse(values[col++].trim()).intValue();
-            boolean dag = format.parse(values[col++].trim()).intValue() > 0;
-            PlotData data = new PlotData(name, d, i, a, na, nc, ce, ca, dag);
+            int cycles = format.parse(values[col++].trim()).intValue();
+            PlotData data = new PlotData(name, d, i, a, na, nc, ce, ca, cycles);
             allData.add(data);
         }
         return allData;
