@@ -29,6 +29,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
 
+import br.com.staroski.tools.analysis.Cycle;
 import br.com.staroski.tools.analysis.Project;
 import br.com.staroski.tools.analysis.Projects;
 import br.com.staroski.tools.analysis.analyzers.AbstractionAnalysisEvent;
@@ -79,13 +80,9 @@ final class MetricsCollectorUI extends JDialog implements I18N {
         @Override
         public void onCycleAnalysisFinished(DependencyAnalysisEvent event) {
             consoleTextPane.print("    ");
-            int cycles = event.getCycles();
-            String message = UI.getText("MetricsCollectorUI.collect.onCycleAnalysisFinished", cycles);
-            if (cycles > 0) {
-                consoleTextPane.println(message, Color.BLACK, Color.YELLOW);
-            } else {
-                consoleTextPane.println(message, Color.BLACK, Color.GREEN);
-            }
+            List<Cycle> cycles = event.getCycles();
+            String message = UI.getText("MetricsCollectorUI.collect.onCycleAnalysisFinished", cycles.size());
+            consoleTextPane.println(message, Color.BLACK, cycles.isEmpty() ? Color.GREEN : Color.YELLOW);
         }
 
         @Override

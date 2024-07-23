@@ -1,5 +1,9 @@
 package br.com.staroski.tools.analysis.analyzers;
 
+import java.util.Collections;
+import java.util.List;
+
+import br.com.staroski.tools.analysis.Cycle;
 import br.com.staroski.tools.analysis.Project;
 
 /**
@@ -10,13 +14,13 @@ import br.com.staroski.tools.analysis.Project;
 public final class DependencyAnalysisEvent {
 
     private Project project;
-    private int cycles;
+    private List<Cycle> cycles;
 
     DependencyAnalysisEvent(Project project) {
-        this(project, 0);
+        this(project, Collections.emptyList());
     }
 
-    DependencyAnalysisEvent(Project project, int cycles) {
+    DependencyAnalysisEvent(Project project, List<Cycle> cycles) {
         this.project = project;
         this.cycles = cycles;
     }
@@ -25,7 +29,7 @@ public final class DependencyAnalysisEvent {
         return project;
     }
 
-    public int getCycles() {
+    public List<Cycle> getCycles() {
         return cycles;
     }
 }

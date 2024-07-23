@@ -40,7 +40,7 @@ abstract class AbstractProject implements Project {
     AbstractProject(File projectFolder) {
         folder = Objects.requireNonNull(projectFolder, "projectFolder cannot be null");
         name = folder.getName();
-        metrics = new DefaultMetrics(this);
+        metrics = new Metrics(this);
     }
 
     @Override

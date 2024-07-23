@@ -1,5 +1,7 @@
 package br.com.staroski.tools.analysis;
 
+import java.util.List;
+
 /**
  * As the {@link Metrics} interface doesnt has setter methods this class provides some {@link MetricsVisitor} implementations to update some specific propeties.
  * 
@@ -36,10 +38,10 @@ public final class MetricsVisitors {
     }
 
     /**
-     * Provides an {@link MetricsVisitor} that sets the acyclic property.
+     * Provides an {@link MetricsVisitor} that sets the cycles property.
      */
-    public static MetricsVisitor setAcyclic(boolean acyclic) {
-        return new AcyclicUpdater(acyclic);
+    public static MetricsVisitor setCycles(List<Cycle> cycles) {
+        return new CyclesUpdater(cycles);
     }
 
     // non instantiable utility class

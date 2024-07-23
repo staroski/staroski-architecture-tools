@@ -1,5 +1,6 @@
 package br.com.staroski.tools.analysis.analyzers;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -38,26 +39,25 @@ public final class DependencyAnalyzer {
         }
     }
 
-    private int getCycles(Project project) {
+    private List<Cycle> getCycles(Project project) {
         Metrics metrics = project.getMetrics();
         if ((metrics.getOutputDependencies() == 0)) {
-            return 0; // ignoring because I depend no one
+            return Collections.emptyList(); // ignoring because I depend no one
         }
         if ((metrics.getInputDependencies() == 0)) {
-            return 0; // ignoring because no one depends on me
+            return Collections.emptyList(); // ignoring because no one depends on me
         }
 
         ShallowCycleAnalyzer cycleAnalyzer = new ShallowCycleAnalyzer();
-        List<Cycle> cycles = cycleAnalyzer.analyze(project);
-        return cycles.size();
+        return cycleAnalyzer.analyze(project);
     }
 
     private void updateAcyclicStats(Set<Project> projects, Project project) {
         listener.onCycleAnalysisStarted(new DependencyAnalysisEvent(project));
 
-        int cycles = getCycles(project);
+        List<Cycle> cycles = getCycles(project);
 
-        project.getMetrics().accept(MetricsVisitors.setAcyclic(cycles == 0));
+        project.getMetrics().accept(MetricsVisitors.setCycles(cycles));
 
         listener.onCycleAnalysisFinished(new DependencyAnalysisEvent(project, cycles));
     }
