@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import br.com.staroski.tools.analysis.Cycle;
 import br.com.staroski.tools.analysis.Project;
 
 /**
@@ -16,35 +17,13 @@ import br.com.staroski.tools.analysis.Project;
  */
 public final class DeepCycleChecker {
 
-    // Class to represent a cycle
-    public static final class Cycle {
-        List<Project> vertices;
-
-        Cycle() {
-            this.vertices = new ArrayList<>();
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder sb = new StringBuilder();
-            for (Project v : vertices) {
-                sb.append(v.getName()).append(" -> ");
-            }
-            sb.append(vertices.get(0).getName()); // Adds the first vertex again to close the cycle
-            return sb.toString();
-        }
-
-        void addProject(Project v) {
-            vertices.add(v);
-        }
-    }
-
     // Class to keep track of colors
     private static final class ColorTracker {
         Map<Project, Integer> colors;
 
         ColorTracker() {
             this.colors = new HashMap<>();
+            
         }
 
         int getColor(Project v) {
@@ -63,7 +42,7 @@ public final class DeepCycleChecker {
 
     // Method to get the found cycles
     public List<Cycle> getCycles(List<Project> graph) {
-        // Mapping the vertices to the visited state
+        // Mapping the projects to the visited state
         Map<Project, Boolean> visited = new HashMap<>();
 
         // Creating a ColorTracker object
@@ -72,7 +51,7 @@ public final class DeepCycleChecker {
         // List to store the found cycles
         List<Cycle> cycles = new ArrayList<>();
 
-        // Iterating over all vertices in the graph
+        // Iterating over all projects in the graph
         for (Project u : graph) {
             // If the vertex has not been visited, call dfs
             if (!visited.containsKey(u)) {
@@ -90,7 +69,7 @@ public final class DeepCycleChecker {
 
     // Function to check if the graph is a DAG (Directed Acyclic Graph)
     public boolean isAcyclic(List<Project> graph) {
-        // Mapping the vertices to the visited state
+        // Mapping the projects to the visited state
         Map<Project, Boolean> visited = new HashMap<>();
 
         // Creating a ColorTracker object
@@ -99,7 +78,7 @@ public final class DeepCycleChecker {
         // List to store the found cycles
         List<Cycle> cycles = new ArrayList<>();
 
-        // Iterating over all vertices in the graph
+        // Iterating over all projects in the graph
         for (Project u : graph) {
             // If the vertex has not been visited, call dfs
             if (!visited.containsKey(u)) {

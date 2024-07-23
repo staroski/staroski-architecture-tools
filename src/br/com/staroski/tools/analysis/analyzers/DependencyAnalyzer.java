@@ -3,10 +3,10 @@ package br.com.staroski.tools.analysis.analyzers;
 import java.util.List;
 import java.util.Set;
 
+import br.com.staroski.tools.analysis.Cycle;
 import br.com.staroski.tools.analysis.Metrics;
 import br.com.staroski.tools.analysis.MetricsVisitors;
 import br.com.staroski.tools.analysis.Project;
-import br.com.staroski.tools.analysis.analyzers.ShallowCycleAnalyzer.Cycle;
 
 /**
  * This class iterates over a {@link Set} of {@link Project} and computes some dependency metrics on it like: number of <b>abstract types</b> ("Na"), number of

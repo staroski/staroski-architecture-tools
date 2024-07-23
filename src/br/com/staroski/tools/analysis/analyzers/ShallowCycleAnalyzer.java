@@ -1,65 +1,36 @@
 package br.com.staroski.tools.analysis.analyzers;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 
+import br.com.staroski.tools.analysis.Cycle;
 import br.com.staroski.tools.analysis.Project;
 
 /**
- * This class search for cycles on the dependencies of a {@link Project}.<br/>
+ * This class search for {@link Cycle}s on the dependencies of a {@link Project}.<br/>
  * It performs a shaloow check, that is it doesn't analyze inner cycles, only cycles that point back to the origin vertez of the graph
  *
  * @author Staroski, Ricardo Artur
  */
 public final class ShallowCycleAnalyzer {
 
-    // Class to represent a cycle
-    public static final class Cycle {
-
-        private final List<Project> projects;
-
-        Cycle() {
-            this.projects = new ArrayList<>();
-        }
-
-        void addProject(Project project) {
-            projects.add(project);
-        }
-
-        public List<Project> getProjects() {
-            return Collections.unmodifiableList(projects);
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder sb = new StringBuilder();
-            for (Project v : projects) {
-                sb.append("\"");
-                sb.append(v.getName());
-                sb.append("\"");
-                sb.append(" -> ");
-            }
-            if (projects.size() > 1) {
-                sb.append("\"");
-                sb.append(projects.get(0).getName()); // close the cycle
-                sb.append("\"");
-            }
-            return sb.toString();
-        }
-    }
-
+    /**
+     * Analyzes the specified {@link Project} searching for dependency {@link Cycle}s.
+     * 
+     * @param project The {@link Project} to search.
+     * @return A {@link List} of {@link Cycle}s if no {@link Cycle} is found, returns an empty {@link List}.
+     */
     public List<Cycle> analyze(Project project) {
         Set<Project> visited = new HashSet<>();
         Stack<Project> stack = new Stack<>();
         List<Cycle> cycles = findCycles(project, project, visited, stack, new HashSet<>());
         if (cycles.isEmpty()) {
-            System.out.println("No cycles");
+            System.out.println("cycles found: 0");
         } else {
-            System.out.println("Cycles found {");
+            System.out.println("cycles found: " + cycles.size() + " {");
             for (Cycle cycle : cycles) {
                 System.out.println("    " + cycle);
             }
