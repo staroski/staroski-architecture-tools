@@ -139,7 +139,7 @@ public final class AnalysisToolsUI extends JFrame implements I18N {
 
     private void openMetricsAnalyzer() {
         MetricsCollectorUI metricsAnalyzer = new MetricsCollectorUI(this);
-        metricsAnalyzer.withCsvConsumer(csv -> dispersionChartPanel.setCsvString(csv));
+        metricsAnalyzer.withListener(projectsFound -> dispersionChartPanel.setProjects(projectsFound));
         metricsAnalyzer.setVisible(true);
     }
 

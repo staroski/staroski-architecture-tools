@@ -5,7 +5,6 @@ import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
@@ -17,7 +16,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -99,6 +97,8 @@ final class MetricsCollectorUI extends JDialog implements I18N {
 
         @Override
         public void onMetricsCollected(Set<Project> projects) {
+            projectsFound = projects.isEmpty() ? null : projects;
+            String metricsCsv = "";
             if (!projects.isEmpty()) {
                 metricsCsv = Projects.getMetricsCsv(projects);
             }
@@ -126,9 +126,10 @@ final class MetricsCollectorUI extends JDialog implements I18N {
     private JLabel labelDirectory;
     private JButton buttonCollect;
     private ConsoleTextPane consoleTextPane;
-    private String metricsCsv;
     private JButton buttonLoadCsv;
-    private Consumer<String> csvConsumer;
+
+    private MetricsCollectorUIListener listener;
+    private Set<Project> projectsFound;
 
     public MetricsCollectorUI(JFrame owner) {
         super(owner, UI.getText("MetricsCollectorUI.title"), true);
@@ -172,15 +173,15 @@ final class MetricsCollectorUI extends JDialog implements I18N {
     @Override
     public void setVisible(boolean visible) {
         if (visible) {
-            metricsCsv = null;
+            projectsFound = null;
             consoleTextPane.clear();
             updateState(false);
         }
         super.setVisible(visible);
     }
 
-    public MetricsCollectorUI withCsvConsumer(Consumer<String> csvConsumer) {
-        this.csvConsumer = csvConsumer;
+    public MetricsCollectorUI withListener(MetricsCollectorUIListener listener) {
+        this.listener = listener;
         return this;
     }
 
@@ -193,7 +194,7 @@ final class MetricsCollectorUI extends JDialog implements I18N {
     }
 
     private void askForLoadMetrics() {
-        if (metricsCsv == null) {
+        if (projectsFound == null) {
             String title = UI.getText("MetricsCollectorUI.loadCsv.warning.title");
             String message = UI.getText("MetricsCollectorUI.loadCsv.warning.message");
             UI.showWarning(this, title, message);
@@ -203,8 +204,8 @@ final class MetricsCollectorUI extends JDialog implements I18N {
         String title = UI.getText("MetricsCollectorUI.loadCsv.title");
         String message = UI.getText("MetricsCollectorUI.loadCsv.message");
         if (UI.showConfirmation(this, title, message)) {
-            if (csvConsumer != null) {
-                csvConsumer.accept(metricsCsv);
+            if (listener != null) {
+                listener.onProjectsFounds(projectsFound);
             }
             dispose();
         }
@@ -232,7 +233,7 @@ final class MetricsCollectorUI extends JDialog implements I18N {
             UI.showWarning(this, title, message);
             return;
         }
-        metricsCsv = null;
+        projectsFound = null;
         consoleTextPane.clear();
 
         Runnable process = () -> runMetricsAnalyzer(directory);
@@ -343,6 +344,6 @@ final class MetricsCollectorUI extends JDialog implements I18N {
         textFieldDirectory.setEditable(enabled);
         buttonDirectory.setEnabled(enabled);
         buttonCollect.setEnabled(enabled);
-        buttonLoadCsv.setEnabled(enabled && metricsCsv != null);
+        buttonLoadCsv.setEnabled(enabled && projectsFound != null);
     }
 }
