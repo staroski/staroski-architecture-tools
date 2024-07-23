@@ -103,6 +103,15 @@ public final class UI {
         return new TreeSet<>(Arrays.asList(UNITED_STATES, GERMANY, BRAZIL));
     }
 
+    public static synchronized String getText(Locale locale, String property, Object... params) {
+        final Locale oldLocale = setLocale(locale, false);
+        try {
+            return getText(property, params);
+        } finally {
+            setLocale(oldLocale, false);
+        }
+    }
+
     public static String getText(String property, Object... params) {
         String message = UIManager.getString(property);
         if (params != null && params.length > 0) {

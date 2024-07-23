@@ -33,6 +33,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 import javax.swing.BorderFactory;
@@ -416,22 +417,25 @@ final class DispersionChartPanel extends JPanel implements I18N {
     public String getCsvString() {
         final StringBuilder csvBuilder = new StringBuilder();
 
-        final TableModel model = tableComponents.getModel();
-        final int columnCount = model.getColumnCount();
-        final int firstColumn = 1;
-        final int lastColumn = columnCount - 1;
+        Locale en_US = UI.UNITED_STATES;
+
+        int columnCount = 10;
+        int firstColumn = 1;
+        int lastColumn = columnCount - 1;
         // titles
         for (int col = firstColumn; col < columnCount; col++) {
-            csvBuilder.append(model.getColumnName(col));
+            String name = UI.getText(en_US, "DispersionChartPanel.components.table.column" + col + ".title");
+            csvBuilder.append(name);
             if (col < lastColumn) {
                 csvBuilder.append(",");
             }
         }
         // data
-        for (int row = 0; row < model.getRowCount(); row++) {
+        int rowCount = allData.size();
+        for (int row = 0; row < rowCount; row++) {
             csvBuilder.append("\n");
             for (int col = firstColumn; col < columnCount; col++) {
-                Object value = model.getValueAt(row, col);
+                Object value = getCsvStringAt(row, col);
                 csvBuilder.append(value);
                 if (col < lastColumn) {
                     csvBuilder.append(",");
@@ -983,6 +987,36 @@ final class DispersionChartPanel extends JPanel implements I18N {
                 UI.showError(this, title, e);
             }
         }
+    }
+
+    private Object getCsvStringAt(int row, int col) {
+        List<PlotData> datalist = allData;
+        if (!datalist.isEmpty() && row < datalist.size()) {
+            PlotData data = datalist.get(row);
+            switch (col) {
+                case 0:
+                    return "";
+                case 1:
+                    return data.name;
+                case 2:
+                    return data.distance;
+                case 3:
+                    return data.instability;
+                case 4:
+                    return data.abstractness;
+                case 5:
+                    return data.abstracts;
+                case 6:
+                    return data.concretes;
+                case 7:
+                    return data.outputs;
+                case 8:
+                    return data.inputs;
+                case 9:
+                    return data.cycles;
+            }
+        }
+        return null;
     }
 
     private List<PlotData> readCsv(File csv) throws Exception {
