@@ -812,7 +812,7 @@ final class DispersionChartPanel extends JPanel implements I18N {
         JPanel leftPanel = createSplitPaneLeft();
         JPanel rightPanel = createSplitPaneRight();
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightPanel);
-        SwingUtilities.invokeLater(() -> splitPane.setDividerLocation(0.45));
+        SwingUtilities.invokeLater(() -> splitPane.setDividerLocation(0.456));
         return splitPane;
     }
 
@@ -1080,9 +1080,11 @@ final class DispersionChartPanel extends JPanel implements I18N {
     }
 
     private void openComponentInspector() {
-        int row = tableComponents.getSelectedRow();
+        int viewIndex = tableComponents.getSelectedRow();
+        int modelIndex = tableComponents.convertRowIndexToModel(viewIndex);
+
         ComponentTableModel tableModel = (ComponentTableModel) tableComponents.getModel();
-        PlotData plotData = tableModel.getObjectAt(row);
+        PlotData plotData = tableModel.getObjectAt(modelIndex);
 
         Project project = projects.stream().filter(item -> item.getName().equals(plotData.name)).findFirst().orElse(null);
 
