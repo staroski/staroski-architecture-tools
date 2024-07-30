@@ -1091,6 +1091,7 @@ final class DispersionChartPanel extends JPanel implements I18N {
         JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this);
         ComponentInspectorUI componentInspector = new ComponentInspectorUI(frame);
         componentInspector.withProject(project);
+        componentInspector.confirmOnClose(false);
         componentInspector.setVisible(true);
     }
 

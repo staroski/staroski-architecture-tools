@@ -38,19 +38,27 @@ final class ProjectPanel extends JPanel implements I18N {
 
         nameField = new JTextField();
         nameField.setEditable(false);
+        nameField.setFont(UI.MONOSPACED);
         nameField.setBackground(Color.WHITE);
         nameBorder = BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.BLACK),
                 UI.getText("ComponentInspectorUI.component.name"),
                 TitledBorder.LEFT, TitledBorder.TOP);
-        nameField.setBorder(nameBorder);
+
+        JPanel namePanel = new JPanel(new BorderLayout());
+        namePanel.setBorder(nameBorder);
+        namePanel.add(nameField, BorderLayout.CENTER);
 
         directoryField = new JTextField();
         directoryField.setEditable(false);
+        directoryField.setFont(UI.MONOSPACED);
         directoryField.setBackground(Color.WHITE);
         directoryBorder = BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.BLACK),
                 UI.getText("ComponentInspectorUI.component.directory"),
                 TitledBorder.LEFT, TitledBorder.TOP);
-        directoryField.setBorder(directoryBorder);
+
+        JPanel directoryPanel = new JPanel(new BorderLayout());
+        directoryPanel.setBorder(directoryBorder);
+        directoryPanel.add(directoryField, BorderLayout.CENTER);
 
         dependenciesArea = new JTextArea();
         dependenciesArea.setEditable(false);
@@ -58,7 +66,9 @@ final class ProjectPanel extends JPanel implements I18N {
         dependenciesdBorder = BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.BLACK),
                 UI.getText("ComponentInspectorUI.component.dependencies"),
                 TitledBorder.LEFT, TitledBorder.TOP);
-        dependenciesArea.setBorder(dependenciesdBorder);
+
+        JScrollPane dependenciesScrollPane = new JScrollPane(dependenciesArea);
+        dependenciesScrollPane.setBorder(dependenciesdBorder);
 
         metricsArea = new JTextArea();
         metricsArea.setEditable(false);
@@ -66,18 +76,17 @@ final class ProjectPanel extends JPanel implements I18N {
         metricsBorder = BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.BLACK),
                 UI.getText("ComponentInspectorUI.component.metrics"),
                 TitledBorder.LEFT, TitledBorder.TOP);
-        metricsArea.setBorder(metricsBorder);
 
-        JScrollPane dependenciesScrollPane = new JScrollPane(dependenciesArea);
         JScrollPane metricsScrollPane = new JScrollPane(metricsArea);
+        metricsScrollPane.setBorder(metricsBorder);
 
         JPanel centerPanel = new JPanel(new GridLayout(2, 1));
         centerPanel.add(dependenciesScrollPane);
         centerPanel.add(metricsScrollPane);
 
         JPanel topPanel = new JPanel(new GridLayout(2, 1));
-        topPanel.add(nameField);
-        topPanel.add(directoryField);
+        topPanel.add(namePanel);
+        topPanel.add(directoryPanel);
 
         add(topPanel, BorderLayout.NORTH);
         add(centerPanel, BorderLayout.CENTER);

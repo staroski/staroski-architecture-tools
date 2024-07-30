@@ -28,6 +28,7 @@ import br.com.staroski.ui.UI;
 final class ComponentInspectorUI extends JDialog implements I18N {
 
     private ProjectPanel projectPanel;
+    private boolean confirmOnClose = true;
 
     public ComponentInspectorUI(JFrame owner) {
         super(owner, UI.getText("ComponentInspectorUI.title"), true);
@@ -40,7 +41,7 @@ final class ComponentInspectorUI extends JDialog implements I18N {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                askForExit();
+                onClose();
             }
         });
 
@@ -62,10 +63,19 @@ final class ComponentInspectorUI extends JDialog implements I18N {
         return this;
     }
 
-    private void askForExit() {
-        String title = UI.getText("ComponentInspectorUI.exit.title");
-        String message = UI.getText("ComponentInspectorUI.exit.message");
-        if (UI.showConfirmation(this, title, message)) {
+    public ComponentInspectorUI confirmOnClose(boolean confirmOnClose) {
+        this.confirmOnClose = confirmOnClose;
+        return this;
+    }
+
+    private void onClose() {
+        if (confirmOnClose) {
+            String title = UI.getText("ComponentInspectorUI.exit.title");
+            String message = UI.getText("ComponentInspectorUI.exit.message");
+            if (UI.showConfirmation(this, title, message)) {
+                dispose();
+            }
+        } else {
             dispose();
         }
     }
