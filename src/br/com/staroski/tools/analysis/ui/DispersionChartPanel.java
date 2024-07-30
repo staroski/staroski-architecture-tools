@@ -405,9 +405,10 @@ final class DispersionChartPanel extends JPanel implements I18N {
     private JMenuItem saveAsPngItem;
     private JMenuItem menuItemCopyColumnContent;
     private JMenuItem menuItemCopyTableContent;
-
     private JMenuItem menuItemComponentInspector;
 
+    private int rowToInspect;
+    
     private Set<Project> projects;
 
     protected DispersionChartPanel() {
@@ -747,6 +748,7 @@ final class DispersionChartPanel extends JPanel implements I18N {
         cellPopupMenu.add(menuItemComponentInspector);
 
         table.addMouseListener(new MouseAdapter() {
+
             public void mousePressed(MouseEvent e) {
                 if (e.isPopupTrigger()) {
                     showCellPopup(e);
@@ -763,9 +765,10 @@ final class DispersionChartPanel extends JPanel implements I18N {
                 int row = table.rowAtPoint(e.getPoint());
                 int column = table.columnAtPoint(e.getPoint());
                 if (column > 0) {
-                    if (!table.isRowSelected(row))
+                    if (!table.isRowSelected(row)) {
                         table.changeSelection(row, column, false, false);
-
+                    }
+                    rowToInspect = row;
                     cellPopupMenu.show(e.getComponent(), e.getX(), e.getY());
                 }
             }
@@ -1080,7 +1083,7 @@ final class DispersionChartPanel extends JPanel implements I18N {
     }
 
     private void openComponentInspector() {
-        int viewIndex = tableComponents.getSelectedRow();
+        int viewIndex = rowToInspect;
         int modelIndex = tableComponents.convertRowIndexToModel(viewIndex);
 
         ComponentTableModel tableModel = (ComponentTableModel) tableComponents.getModel();
