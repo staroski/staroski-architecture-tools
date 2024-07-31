@@ -16,7 +16,7 @@ The tool reads a CSV file containing metrics for each component, including:
 - **Nc**: Number of concrete types (an integer);
 - **Ce**: Efferent coupling, i.e., outgoing dependencies (an integer);
 - **Ca**: Afferent coupling, i.e., incoming dependencies (an integer);
-- **DAG**: Directed Acyclic Graph indicator (1 if acyclic, 0 if cyclic).
+- **Cycles**: Number of circular dependencies (0 means is a Directed Acyclic Graph).
 
 The Component Dispersion Chart, also known as Component Scatterplot, provides a visual representation of how components are distributed based on these metrics, facilitating identification of architectural patterns, dependencies, and potential areas for refactoring or improvement.
 
